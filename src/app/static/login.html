@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LGR Sim Workbench · Sign in</title>
+<link rel="stylesheet" href="/static/styles.css">
+<style>
+  body.login-page {
+    background: #F4F6F8;
+    color: #101215;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }
+  .login-card {
+    background: #ffffff;
+    border: 1px solid #A7AEB6;
+    padding: 32px 36px;
+    max-width: 360px;
+    width: 100%;
+  }
+  .login-card h1 {
+    font-size: 18px;
+    margin: 0 0 8px 0;
+    color: #101215;
+  }
+  .login-card p {
+    font-size: 14px;
+    color: #101215;
+    margin: 0 0 24px 0;
+    line-height: 1.5;
+  }
+  .login-button {
+    display: inline-block;
+    background: #006B5C;
+    color: #ffffff;
+    border: none;
+    padding: 10px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: inherit;
+  }
+  .login-button:hover {
+    background: #00574B;
+  }
+</style>
+</head>
+<body class="login-page">
+  <div class="login-card">
+    <h1>LGR Sim Workbench</h1>
+    <p>Sign in with Google to access the simulator.</p>
+    <a class="login-button" href="/auth/start">Sign in with Google</a>
+  </div>
+</body>
+</html>

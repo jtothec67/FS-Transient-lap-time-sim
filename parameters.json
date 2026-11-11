@@ -1,0 +1,51 @@
+{
+    "general": {
+        "name": "F25_IC_Car",
+        "mass": 320.0,
+        "base_mu": 1.5
+    },
+    "aerodynamics": {
+        "frontal_area": 0.75,
+        "drag_coefficient": 0.85,
+        "downforce_coefficient": 0.07,
+        "CLA_m2": 0.0525,
+        "aero_cp": 1.0
+    },
+    "geometry": {
+        "wheelbase": 1.6,
+        "front_track_width": 1.26,
+        "rear_track_width": 1.23, 
+        "cog_z": 0.48,
+        "cog_longitudinal_pos": 0.516,
+        "max_cog_z": 0.6
+    },
+    "vehicle_dynamics": {
+        "roll_stiffness": 21439.4904459,
+        "suspension_stiffness": 21439,
+        "damping_coefficient": 0,
+        "max_roll_angle_deg": 10
+    },
+    "drivetrain": {
+        "wheel_radius": 0.2032,
+        "final_drive_ratio": 2.6,
+        "gear_ratios": [2.75, 2, 1.667, 1.304, 1.208],
+        "transmission_efficiency": 0.95
+    },
+    "_comments": {
+        "mass": "kg",
+        "frontal_area": "m²",
+        "drag_coefficient": "dimensionless",
+        "downforce_coefficient": "DEPRECATED. Use CLA_m2 instead. Dimensionless lift coefficient (not L/D ratio).",
+        "CLA_m2": "Downforce coefficient times reference area in m² (Cl * A). Used directly in F_downforce = 0.5 * rho * v^2 * CLA_m2. Value = downforce_coefficient * frontal_area = 0.07 * 0.75 = 0.0525 m².",
+        "aero_cp": "m from front axle",
+        "wheelbase": "m",
+        "front_track_width": "m",
+        "rear_track_width": "m",
+        "cog_z": "m",
+        "cog_longitudinal_pos": "Fraction of total mass on the front axle in static conditions (dimensionless, 0 to 1). Equals distance from rear axle to CoG divided by wheelbase (l_r / L).",
+        "wheel_radius": "m (effective rolling radius)",
+        "final_drive_ratio": "dimensionless (final drive gear ratio)",
+        "gear_ratios": "dimensionless (gear ratios for each gear)",
+        "transmission_efficiency": "dimensionless (0-1, mechanical efficiency)"
+    }
+}

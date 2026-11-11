@@ -1,0 +1,17 @@
+services:
+  lgr-sim-workbench:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lgr-sim-workbench:local
+    ports:
+      - "${HOST_PORT:-3000}:3000"
+    environment:
+      MPLBACKEND: Agg
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:3000}
+      SESSION_SECRET: ${SESSION_SECRET:-local-dev-session-secret-change-me}
+      LOCAL_AUTH_BYPASS_EMAIL: ${LOCAL_AUTH_BYPASS_EMAIL:-local-dev@example.com}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+    restart: unless-stopped

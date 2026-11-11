@@ -1,0 +1,1334 @@
+[
+  {
+    "file": "Aero-Model.md",
+    "section": "Read this after",
+    "summary": "The section instructs the reader to review the \"Powertrain Model and Wheel Force Flow\" document before proceeding.",
+    "heading_level": 2
+  },
+  {
+    "file": "Aero-Model.md",
+    "section": "Audience",
+    "summary": "The section defines the intended audience as readers who are already familiar with the basic simulator flow.",
+    "heading_level": 2
+  },
+  {
+    "file": "Aero-Model.md",
+    "section": "Goal",
+    "summary": "The \"Goal\" section outlines the expected learning outcomes of understanding the role of drag and downforce in the simulator, the quadratic relationship between aerodynamic forces and speed, the effect of the aero center of pressure on tire loads, and the tradeoff that determines how aerodynamics impacts lap speed.",
+    "heading_level": 2
+  },
+  {
+    "file": "Aero-Model.md",
+    "section": "One minute mental model",
+    "summary": "A Formula Student car's aerodynamics produces both drag, which hinders acceleration and top speed by resisting motion, and downforce, which improves cornering grip by pressing the car into the road.",
+    "heading_level": 2
+  },
+  {
+    "file": "Aero-Model.md",
+    "section": "Drag and downforce in this simulator",
+    "summary": "The section details how drag and downforce are computed using speed-squared relations with specific coefficients, showing that in the baseline setup drag exceeds downforce across most speeds, creating a potential straight-line performance penalty.",
+    "heading_level": 2
+  },
+  {
+    "file": "Aero-Model.md",
+    "section": "Aero center of pressure and axle load split",
+    "summary": "The section explains how the aero center of pressure (CoP) location along the wheelbase determines the distribution of aerodynamic downforce between the front and rear axles under static equilibrium, with a seesaw analogy and example outputs showing front-biased versus rear-biased CoP effects on tyre loads at different speeds.",
+    "heading_level": 2
+  },
+  {
+    "file": "Aero-Model.md",
+    "section": "How aero couples with tyre and powertrain",
+    "summary": "Aero couples with the tyre and powertrain by having powertrain-requested longitudinal force reduced by drag, while downforce increases tyre normal loads and thus available force limits.",
+    "heading_level": 2
+  },
+  {
+    "file": "Aero-Model.md",
+    "section": "Speed profile tradeoff example",
+    "summary": "A comparison of baseline and modified aero packages on a live simulator reveals that the higher-downforce, higher-drag package results in a slightly slower overall lap time (65.403 s vs. 65.353 s), with speed decreases at 141 points on track and increases at only 26 points, demonstrating that aero setup is a tradeoff problem.",
+    "heading_level": 2
+  },
+  {
+    "file": "Aero-Model.md",
+    "section": "Known limits in this intro",
+    "summary": "This intro section explicitly states that it simplifies aerodynamic modeling by omitting full ride-height aero maps and transient aero effects.",
+    "heading_level": 2
+  },
+  {
+    "file": "Aero-Model.md",
+    "section": "Next lesson",
+    "summary": "The \"Next lesson\" section directs users to the Vehicle Modelling Capstone module as the subsequent step in the learning path.",
+    "heading_level": 2
+  },
+  {
+    "file": "Aero-Model.md",
+    "section": "Related lessons",
+    "summary": "The Related Lessons section lists prerequisite or companion resources for the lap time simulator, including guides on simulator basics, tyre and powertrain modelling, vehicle modelling, solver logic, diagnostics, and track geometry.",
+    "heading_level": 2
+  },
+  {
+    "file": "Braking-Dynamics-and-Deceleration-Budget.md",
+    "section": "Read this after",
+    "summary": "The section titled \"Read this after\" specifies that the reader should first review the documentation on load transfer and normal loads before proceeding.",
+    "heading_level": 2
+  },
+  {
+    "file": "Braking-Dynamics-and-Deceleration-Budget.md",
+    "section": "Goal",
+    "summary": "Braking is solved backwards by reversing the quasi-steady state method to find the maximum deceleration that the rear tyre can support without violating friction limits, the deceleration budget is split between tyre grip (peak friction level) and lateral demand (path curvature), and braking-limited results are inspected by checking whether the achieved longitudinal force matches the friction ellipse limit.",
+    "heading_level": 2
+  },
+  {
+    "file": "Braking-Dynamics-and-Deceleration-Budget.md",
+    "section": "One minute mental model",
+    "summary": "The section outlines the backwards-working braking pass logic of the lap time simulator, where the solver calculates the maximum entry speed for each point by considering the deceleration budget, available distance, and tyre-drag limits.",
+    "heading_level": 2
+  },
+  {
+    "file": "Braking-Dynamics-and-Deceleration-Budget.md",
+    "section": "Backward speed propagation",
+    "summary": "Backward speed propagation calculates vehicle speeds in reverse along the track by applying constant-acceleration kinematics from each segment endpoint to the previous point, then capping the resulting speed at the corner speed limit.",
+    "heading_level": 2
+  },
+  {
+    "file": "Braking-Dynamics-and-Deceleration-Budget.md",
+    "section": "Tyre braking force limit",
+    "summary": "When calculating braking force, the tyre model uses normal load and slip ratio to determine the maximum longitudinal force for each axle, considering front and rear load distribution and inputs such as grip scale, speed, and curvature.",
+    "heading_level": 2
+  },
+  {
+    "file": "Braking-Dynamics-and-Deceleration-Budget.md",
+    "section": "Lateral demand consumes braking budget",
+    "summary": "The section explains how lateral force demand, estimated as F_y = m v²|κ|, reduces the available longitudinal braking force by applying a friction-circle or friction-ellipse scale to the longitudinal capacity, thus consuming part of the braking budget.",
+    "heading_level": 2
+  },
+  {
+    "file": "Braking-Dynamics-and-Deceleration-Budget.md",
+    "section": "Aero drag helps braking",
+    "summary": "Aerodynamic drag, calculated as force divided by mass, is added to tyre-limited deceleration during braking to increase stopping power without consuming tyre friction, though it negatively impacts acceleration and top speed.",
+    "heading_level": 2
+  },
+  {
+    "file": "Braking-Dynamics-and-Deceleration-Budget.md",
+    "section": "Braking realism gate",
+    "summary": "The braking realism gate evaluates whether the default simulation model avoids a hard-coded braking deceleration cap, detects active cap events as experimental overrides, and reports static longitudinal tyre limits along with an estimate of legacy double-scaling behavior.",
+    "heading_level": 2
+  },
+  {
+    "file": "Braking-Dynamics-and-Deceleration-Budget.md",
+    "section": "Diagnostics to inspect",
+    "summary": "The section lists specific channels to inspect for suspicious braking behavior and provides an interpretation guide for understanding whether braking was limited by capability, lateral saturation, corner ceiling, or hard braking clips.",
+    "heading_level": 2
+  },
+  {
+    "file": "Braking-Dynamics-and-Deceleration-Budget.md",
+    "section": "Assumptions and limits",
+    "summary": "The section outlines key simplifications in the lap time simulator, including quasi-static braking segments, omission of brake balance and tyre thermal dynamics, treatment of drag as an external deceleration force, and the use of a compact combined-slip friction budget instead of a full transient tyre model.",
+    "heading_level": 2
+  },
+  {
+    "file": "Braking-Dynamics-and-Deceleration-Budget.md",
+    "section": "Verification checks",
+    "summary": "The section lists useful verification checks, including specific evaluation, test, and A/B testing scripts, and notes that Milestone 5 includes synthetic straight-line acceleration and brake checks within the validation hierarchy.",
+    "heading_level": 2
+  },
+  {
+    "file": "Braking-Dynamics-and-Deceleration-Budget.md",
+    "section": "Next lesson",
+    "summary": "The final lesson links to a capstone project that integrates all previously covered vehicle modelling concepts.",
+    "heading_level": 2
+  },
+  {
+    "file": "Braking-Dynamics-and-Deceleration-Budget.md",
+    "section": "Related lessons",
+    "summary": "The Related Lessons section links to prerequisite or supplementary topics, including a Tyre Model Deep Dive, Load Transfer and Normal Loads, Vehicle Modelling Diagnostics and Trust Checks, and Numerical Robustness and Solver Failure Modes.",
+    "heading_level": 2
+  },
+  {
+    "file": "Calibration-and-Sensitivity-Workflow.md",
+    "section": "Read this after",
+    "summary": "The \"Read this after\" section directs users to first consult the \"Validation and Falsification Workflow\" document before proceeding with the current material.",
+    "heading_level": 2
+  },
+  {
+    "file": "Calibration-and-Sensitivity-Workflow.md",
+    "section": "Goal",
+    "summary": "The Goal section outlines how to responsibly adjust vehicle dynamics parameters, interpret parameter sensitivity, and prevent the practice of retuning to conceal underlying errors in the model.",
+    "heading_level": 2
+  },
+  {
+    "file": "Calibration-and-Sensitivity-Workflow.md",
+    "section": "One minute mental model",
+    "summary": "The section outlines calibration as a structured, physics-verifying sequence of freezing the baseline, changing one variable, comparing outputs, confirming physical plausibility, and assessing credibility—not as arbitrary tuning to match lap times.",
+    "heading_level": 2
+  },
+  {
+    "file": "Calibration-and-Sensitivity-Workflow.md",
+    "section": "Freeze the baseline",
+    "summary": "The section outlines the procedure for documenting key simulation outputs from a known baseline vehicle configuration before making parameter changes to ensure traceability.",
+    "heading_level": 2
+  },
+  {
+    "file": "Calibration-and-Sensitivity-Workflow.md",
+    "section": "Change one parameter at a time",
+    "summary": "To isolate the effect of a single parameter on lap time, only one variable should be changed per simulation run to avoid confounding the results.",
+    "heading_level": 2
+  },
+  {
+    "file": "Calibration-and-Sensitivity-Workflow.md",
+    "section": "Sensitivity signs",
+    "summary": "Sensitivity signs document the expected directional effects of parameter changes—such as higher grip improving cornering, higher center of gravity height worsening rollover limits, higher drag reducing acceleration, and more downforce trading off cornering benefits against straight-line drag—while noting that unexpected signs warrant diagnostic investigation rather than immediate assumption of code errors.",
+    "heading_level": 2
+  },
+  {
+    "file": "Calibration-and-Sensitivity-Workflow.md",
+    "section": "Stale parameters",
+    "summary": "Stale parameters are inputs that appear to change but produce no output effect, caused by disconnection from the model, variant exclusion, dominant caps, or track inadequacy, requiring combined sensitivity sweeps and limiter diagnostics rather than relying solely on a zero lap-time delta.",
+    "heading_level": 2
+  },
+  {
+    "file": "Calibration-and-Sensitivity-Workflow.md",
+    "section": "A/B workflow",
+    "summary": "The A/B workflow section describes how to run controlled comparisons using the A/B suite script, inspect diagnostic outputs like sensitivity, limiter counts, and solver health, and specifies milestone 3's sensitivity gate and sign check while recommending that results be paired with diagnostics such as limiter mode mix and tyre out-of-domain counts for senior review.",
+    "heading_level": 2
+  },
+  {
+    "file": "Calibration-and-Sensitivity-Workflow.md",
+    "section": "How to debug a surprising result",
+    "summary": "The section provides a systematic, six-step diagnostic protocol for investigating unexpected lap time simulation outputs, starting with verification of static parameters and code paths, then examining physical subsystems such as limiter modes, solver health, tyre and load diagnostics, and GG envelope behavior, before finally considering calibration adjustments.",
+    "heading_level": 2
+  },
+  {
+    "file": "Calibration-and-Sensitivity-Workflow.md",
+    "section": "Do not tune scenarios into the vehicle",
+    "summary": "Scenario multipliers should be used to explicitly model environmental changes (like wet grip or air density), rather than altering the base vehicle parameters to account for them.",
+    "heading_level": 2
+  },
+  {
+    "file": "Calibration-and-Sensitivity-Workflow.md",
+    "section": "Assumptions and limits",
+    "summary": "The section outlines key constraints for interpreting simulator results, including the dependency of A/B sensitivity on solver health, the risk of misattributing lap-time deltas to unintended limiter changes, the need to calibrate parameters against real data, and the requirement for synthetic maneuvers before full-lap testing.",
+    "heading_level": 2
+  },
+  {
+    "file": "Calibration-and-Sensitivity-Workflow.md",
+    "section": "Verification checks",
+    "summary": "Verification checks use two scripts: the A/B testing suite to run sensitivity checks on specific tracks with defined thresholds and gates, and the constant radius suite to produce diagnostic outputs for sensitivity analysis.",
+    "heading_level": 2
+  },
+  {
+    "file": "Calibration-and-Sensitivity-Workflow.md",
+    "section": "Next lesson",
+    "summary": "The \"Next Lesson\" section links to the Scenario Separation page, which explains how to split the lap time simulation into distinct sections or phases for analysis and optimization.",
+    "heading_level": 2
+  },
+  {
+    "file": "Calibration-and-Sensitivity-Workflow.md",
+    "section": "Related lessons",
+    "summary": "The \"Related lessons\" section links to resources on validation workflows, vehicle modelling diagnostics, real versus simulated vehicle analysis, and load transfer concepts for Formula Student lap time simulation.",
+    "heading_level": 2
+  },
+  {
+    "file": "Load-Transfer-and-Normal-Loads.md",
+    "section": "Read this after",
+    "summary": "The section titled \"Read this after\" instructs readers to first review the Aerodynamics Model Intro document, establishing a prerequisite for the current material.",
+    "heading_level": 2
+  },
+  {
+    "file": "Load-Transfer-and-Normal-Loads.md",
+    "section": "Goal",
+    "summary": "The Goal section explains the simulator's computation of normal load, the mechanism by which changes in normal load alter tyre force capacity, and the specific diagnostics used to indicate stress on the load model.",
+    "heading_level": 2
+  },
+  {
+    "file": "Load-Transfer-and-Normal-Loads.md",
+    "section": "One minute mental model",
+    "summary": "The \"One minute mental model\" explains how the simulator calculates tyre force limits by tracking vertical normal loads at the front and rear axles, accounting for the nonlinear relationship between increased load and available friction.",
+    "heading_level": 2
+  },
+  {
+    "file": "Load-Transfer-and-Normal-Loads.md",
+    "section": "Static normal load",
+    "summary": "The static normal load section defines the stationary vertical forces on a Formula Student car, calculated from total weight and longitudinal centre of gravity position, with axle loads split by the static front load fraction and divided by two for per-tyre values.",
+    "heading_level": 2
+  },
+  {
+    "file": "Load-Transfer-and-Normal-Loads.md",
+    "section": "Aero load split",
+    "summary": "The section explains how the simulator calculates total downforce from speed, distributes it between front and rear axles according to the aero centre of pressure position, and notes that shifting this centre rearward alters cornering and traction balance independently of total downforce.",
+    "heading_level": 2
+  },
+  {
+    "file": "Load-Transfer-and-Normal-Loads.md",
+    "section": "Longitudinal load transfer",
+    "summary": "The section covers how the simulator models longitudinal load transfer during acceleration and braking using the quasi-static formula $\\Delta F_z = \\frac{m a_x h}{L}$, which calculates the shift in normal load between axles based on mass, longitudinal acceleration, centre of gravity height, and wheelbase.",
+    "heading_level": 2
+  },
+  {
+    "file": "Load-Transfer-and-Normal-Loads.md",
+    "section": "How loads feed the tyre model",
+    "summary": "The section explains that the tyre model receives front and rear normal loads from the solver when computing lateral or longitudinal force, which directly affects force limits during the corner, forward acceleration, and backward braking passes for runtime users.",
+    "heading_level": 2
+  },
+  {
+    "file": "Load-Transfer-and-Normal-Loads.md",
+    "section": "Physical guardrails",
+    "summary": "The section covers physical guardrails that prevent negative axle loads in the load model, including two diagnostic event types—one for non-physical loads (a red flag) and another for load transfer clamping (a warning)—to assess model credibility and proximity to simplified assumptions.",
+    "heading_level": 2
+  },
+  {
+    "file": "Load-Transfer-and-Normal-Loads.md",
+    "section": "Rollover speed cap",
+    "summary": "The corner speed search applies a quasi-static rollover speed cap, calculated from track width, centre of gravity height, gravity, and curvature radius using the formula \\( v_{roll} = \\sqrt{\\frac{t}{2h} g R} \\), which is conservative as it does not model transient roll dynamics or tyre lift progression.",
+    "heading_level": 2
+  },
+  {
+    "file": "Load-Transfer-and-Normal-Loads.md",
+    "section": "Diagnostics to inspect",
+    "summary": "The section lists specific diagnostic channels for monitoring tyre normal loads, non-physical events, clamped load transfers, and cornering speed limits, as output by the calcSpeedProfile.py script and summarized in A/B reports.",
+    "heading_level": 2
+  },
+  {
+    "file": "Load-Transfer-and-Normal-Loads.md",
+    "section": "Assumptions and limits",
+    "summary": "The section \"Assumptions and limits\" outlines the key simplifications used in the lap time simulator, including quasi-static load transfer, a simplified lateral load transfer model, a centre-of-pressure aero model, and the role of transfer clamps as indicators for re-evaluating assumptions.",
+    "heading_level": 2
+  },
+  {
+    "file": "Load-Transfer-and-Normal-Loads.md",
+    "section": "Verification checks",
+    "summary": "The verification checks section details the specific test files and milestone requirements for ensuring no non-physical normal-load events and correct sensitivity signs in the simulator.",
+    "heading_level": 2
+  },
+  {
+    "file": "Load-Transfer-and-Normal-Loads.md",
+    "section": "Next lesson",
+    "summary": "The \"Next lesson\" section provides a direct link to the topic of Braking Dynamics and Deceleration Budget for continued study.",
+    "heading_level": 2
+  },
+  {
+    "file": "Load-Transfer-and-Normal-Loads.md",
+    "section": "Related lessons",
+    "summary": "The \"Related lessons\" section provides direct links to other resources covering aerodynamics, tyre modeling, vehicle simulation, validation workflows, and a full index for users seeking deeper technical context.",
+    "heading_level": 2
+  },
+  {
+    "file": "Numerical-Robustness-and-Solver-Failure-Modes.md",
+    "section": "Read this after",
+    "summary": "The section outlines the required prerequisite reading—specifically the \"Simulator Summary and Core Solver\"—before engaging with its own content.",
+    "heading_level": 2
+  },
+  {
+    "file": "Numerical-Robustness-and-Solver-Failure-Modes.md",
+    "section": "Goal",
+    "summary": "The \"Goal\" section outlines the solver's logic for validating corner solutions, defines the purpose of fallback strategies, and identifies the specific gates that prevent numerical artifacts from masquerading as genuine performance gains.",
+    "heading_level": 2
+  },
+  {
+    "file": "Numerical-Robustness-and-Solver-Failure-Modes.md",
+    "section": "One minute mental model",
+    "summary": "The corner solver can fail during lap simulation, but such failures are acceptable as long as they are visible, bounded, and physically conservative, with successful points solving equilibrium and fallback points using a constrained speed estimate while recording the failed normal solve.",
+    "heading_level": 2
+  },
+  {
+    "file": "Numerical-Robustness-and-Solver-Failure-Modes.md",
+    "section": "Corner solve structure",
+    "summary": "The corner solve structure uses an outer bisection to find the maximum feasible speed, with an inner root solve that determines the steering angle and sideslip angle at that speed.",
+    "heading_level": 2
+  },
+  {
+    "file": "Numerical-Robustness-and-Solver-Failure-Modes.md",
+    "section": "Equilibrium residuals",
+    "summary": "Equilibrium residuals refer to diagnostic checks that ensure the solver has successfully balanced lateral forces and yaw moments by verifying absolute and relative residual values for steering angle and sideslip, beyond just the root solver success flag.",
+    "heading_level": 2
+  },
+  {
+    "file": "Numerical-Robustness-and-Solver-Failure-Modes.md",
+    "section": "Retry tiers",
+    "summary": "The retry tiers section explains the three solve tiers (base, warm_start, and conservative_bound) used for numerical robustness in the speed profile solver, along with their associated diagnostics for tracking retries, solve methods, and failure reasons.",
+    "heading_level": 2
+  },
+  {
+    "file": "Numerical-Robustness-and-Solver-Failure-Modes.md",
+    "section": "Fallback behavior",
+    "summary": "The Fallback behavior section explains how a point receives a constrained maximum speed bounded by a tyre-friction estimate, a physical cap from rollover and lateral limits, and a continuity limit from the previous point when all solve tiers fail.",
+    "heading_level": 2
+  },
+  {
+    "file": "Numerical-Robustness-and-Solver-Failure-Modes.md",
+    "section": "Why fallback can be risky",
+    "summary": "The \"Why fallback can be risky\" section explains that while numerical fallback logic protects lap simulations from isolated solver failures, it introduces the danger of artificially inflating vehicle performance, and it lists seven control mechanisms—including physical and continuity caps, fallback flags, rate and success gates, and spike checks—alongside Milestone 4 to prevent robustness measures from compromising physical accuracy.",
+    "heading_level": 2
+  },
+  {
+    "file": "Numerical-Robustness-and-Solver-Failure-Modes.md",
+    "section": "Diagnostics to inspect",
+    "summary": "The section lists diagnostic outputs from the corner solver—including solver success, fallback usage, retry count, failure reasons, physically capped speed, and lateral and yaw residuals—followed by a check for unusual g-force spikes in the final lap within the vehicle modelling diagnostics.",
+    "heading_level": 2
+  },
+  {
+    "file": "Numerical-Robustness-and-Solver-Failure-Modes.md",
+    "section": "Assumptions and limits",
+    "summary": "The section outlines the key assumptions and limitations of the lap time simulator, including its steady-state bicycle model, the use of a bounded fallback approximation, residual thresholds as engineering gates, and the condition that a low fallback count is acceptable only if other diagnostics remain credible.",
+    "heading_level": 2
+  },
+  {
+    "file": "Numerical-Robustness-and-Solver-Failure-Modes.md",
+    "section": "Verification checks",
+    "summary": "The Verification checks section outlines commands for running unit tests on solver and limiting case contracts, and executing an A/B comparison suite with specified tracks, variants, thresholds, and milestone gates to validate simulation outputs.",
+    "heading_level": 2
+  },
+  {
+    "file": "Numerical-Robustness-and-Solver-Failure-Modes.md",
+    "section": "Next lesson",
+    "summary": "The section titled \"Next lesson\" links to a resource on vehicle modelling diagnostics and trust checks, serving as the subsequent topic after the current content.",
+    "heading_level": 2
+  },
+  {
+    "file": "Numerical-Robustness-and-Solver-Failure-Modes.md",
+    "section": "Related lessons",
+    "summary": "The \"Related lessons\" section provides direct links to key foundational and advanced topics, including vehicle modelling, the core simulator solver, braking dynamics, and a validation workflow, along with a full lessons index.",
+    "heading_level": 2
+  },
+  {
+    "file": "Powertrain-Model.md",
+    "section": "Read this after",
+    "summary": "The section instructs users to first read the Tyre Model Intro before engaging with the current content.",
+    "heading_level": 2
+  },
+  {
+    "file": "Powertrain-Model.md",
+    "section": "Audience",
+    "summary": "The audience section specifies the note is intended for developers seeking to understand the simulator's conversion of RPM and gearing into longitudinal force.",
+    "heading_level": 2
+  },
+  {
+    "file": "Powertrain-Model.md",
+    "section": "Goal",
+    "summary": "The section defines the scope of the lap time simulator by explaining the first-principles powertrain chain, the role of wheel radius in the equations, and the method for combining powertrain force with tyre limits during lap simulation.",
+    "heading_level": 2
+  },
+  {
+    "file": "Powertrain-Model.md",
+    "section": "Starting Point",
+    "summary": "The Starting Point section defines the production path's use of lookup-table power data, drivetrain ratios, efficiency, and wheel-radius torque-to-force conversion, with a default Honda CBR600RR configuration.",
+    "heading_level": 2
+  },
+  {
+    "file": "Powertrain-Model.md",
+    "section": "First Principles View",
+    "summary": "Larger wheel radius reduces the longitudinal traction force at the contact patch for a given wheel torque, as derived from the relationship between power, torque, and force at the wheel hub.",
+    "heading_level": 2
+  },
+  {
+    "file": "Powertrain-Model.md",
+    "section": "1) Power curve lookup",
+    "summary": "The Power curve lookup subsection explains how the simulator loads powertrain data, prioritizing continuous power over peak power, with a default reference to the Honda CBR 600RR engine data file.",
+    "heading_level": 3
+  },
+  {
+    "file": "Powertrain-Model.md",
+    "section": "2) Torque from power",
+    "summary": "The section covers the mathematical formula and implementation details for calculating engine torque from power across engine RPM, using the equation T_engine(rpm) = (P(rpm) × 1000 × 60) / (2π × rpm) within the `LookupTablePowertrainModel.get_torque` method.",
+    "heading_level": 3
+  },
+  {
+    "file": "Powertrain-Model.md",
+    "section": "3) Speed to engine RPM",
+    "summary": "The section defines the mathematical relationship used to convert vehicle speed into engine RPM by accounting for the selected gear ratio, final drive ratio, and wheel radius.",
+    "heading_level": 3
+  },
+  {
+    "file": "Powertrain-Model.md",
+    "section": "4) Wheel torque through drivetrain",
+    "summary": "The section defines wheel torque as the product of engine torque, gear ratio, final drive ratio, and transmission efficiency.",
+    "heading_level": 3
+  },
+  {
+    "file": "Powertrain-Model.md",
+    "section": "5) Traction force at contact patch",
+    "summary": "At the contact patch, the powertrain-limited traction force is determined by the wheel torque divided by the wheel radius.",
+    "heading_level": 3
+  },
+  {
+    "file": "Powertrain-Model.md",
+    "section": "Where wheel_radius matters",
+    "summary": "The section outlines the two key effects of `wheel_radius`—reducing RPM at a given vehicle speed and decreasing contact-patch force for a given wheel torque—and notes that these lead to its direct monotonic contracts in the parameter enforcement tests.",
+    "heading_level": 2
+  },
+  {
+    "file": "Powertrain-Model.md",
+    "section": "Gear Selection Logic",
+    "summary": "For every speed increment, the gear ratio that produces the highest net longitudinal force is chosen from all available options.",
+    "heading_level": 2
+  },
+  {
+    "file": "Powertrain-Model.md",
+    "section": "Coupling with Tyre Model and base_mu",
+    "summary": "The section describes how the forward pass in `calcSpeedProfile.py` computes net longitudinal force as the minimum of powertrain-limited and tyre-limited forces minus aerodynamic drag, while clarifying that `base_mu` affects tyre force capability and `wheel_radius` affects powertrain force, requiring cross-linking between the two domains.",
+    "heading_level": 2
+  },
+  {
+    "file": "Powertrain-Model.md",
+    "section": "Validation and Contracts",
+    "summary": "The Validation and Contracts section verifies that key physical relationships, such as the effects of transmission efficiency, final drive ratio, wheel radius, and gear ratio on wheel torque and traction force, are correctly enforced through contract testing.",
+    "heading_level": 2
+  },
+  {
+    "file": "Powertrain-Model.md",
+    "section": "Known Limits",
+    "summary": "The Known Limits section specifies that the current compact, quasi-static powertrain model omits transient dynamics, thermal derating, and gear shift delays in favor of fast, stable runtime for sweep-heavy lap studies.",
+    "heading_level": 2
+  },
+  {
+    "file": "Powertrain-Model.md",
+    "section": "Next lesson",
+    "summary": "The next lesson introduces the aerodynamics model, covering how downforce and drag are calculated and applied in the vehicle dynamics simulation.",
+    "heading_level": 2
+  },
+  {
+    "file": "Powertrain-Model.md",
+    "section": "Related Lessons",
+    "summary": "The 'Related Lessons' section lists links to eight other pages covering simulator fundamentals, tyre and aerodynamics modelling, vehicle modelling, solver operation, diagnostics, track geometry, and an index.",
+    "heading_level": 2
+  },
+  {
+    "file": "Scenario-Separation.md",
+    "section": "Read this after",
+    "summary": "After reading the Calibration and Sensitivity Workflow, this section explains the process for running a single simulated lap and interpreting the results from the lap time simulator.",
+    "heading_level": 2
+  },
+  {
+    "file": "Scenario-Separation.md",
+    "section": "Goal",
+    "summary": "The Goal section distinguishes between constant base vehicle parameters and variable scenario effects (such as track conditions or driver inputs), and details the simulator's method for maintaining their independence.",
+    "heading_level": 2
+  },
+  {
+    "file": "Scenario-Separation.md",
+    "section": "One minute mental model",
+    "summary": "The section explains the \"one minute mental model\" architecture, where a base vehicle model is separated from a scenario layer—using scenario multipliers for weather and track conditions—so that changing the scenario does not require recalibrating the car's tyre or aero parameters.",
+    "heading_level": 2
+  },
+  {
+    "file": "Scenario-Separation.md",
+    "section": "Base vehicle parameters",
+    "summary": "The Base vehicle parameters section defines the fixed physical attributes of the car, such as mass, wheelbase, and aero coefficients, which remain constant across different simulation scenarios.",
+    "heading_level": 2
+  },
+  {
+    "file": "Scenario-Separation.md",
+    "section": "Scenario parameters",
+    "summary": "The section defines scenario parameters that specify operating conditions, including the scenario name, grip scale, and air density scale, and references the code responsible for retrieving this context.",
+    "heading_level": 2
+  },
+  {
+    "file": "Scenario-Separation.md",
+    "section": "Good scenario implementation",
+    "summary": "A good wet-track scenario reduces grip to 90% and increases air density by 3% while keeping the base coefficient of friction (`base_mu`) unchanged, with the scenario grip multiplier adjusting the operating condition.",
+    "heading_level": 2
+  },
+  {
+    "file": "Scenario-Separation.md",
+    "section": "Bad scenario implementation",
+    "summary": "A poorly implemented wet scenario silently lowers the `base_mu` parameter, which corrupts the vehicle calibration, breaks the shared baseline for comparisons, and invalidates future calibration work and A/B reports.",
+    "heading_level": 2
+  },
+  {
+    "file": "Scenario-Separation.md",
+    "section": "Runtime reporting",
+    "summary": "Runtime reporting ensures A/B outputs include explicit scenario context parameters (`scenario_name`, `scenario_grip_scale`, `scenario_air_density_scale`) and that Milestone 6 gates validate their presence and positive multiplier values.",
+    "heading_level": 2
+  },
+  {
+    "file": "Scenario-Separation.md",
+    "section": "Relationship to validation",
+    "summary": "The section details how scenario-based changes, such as reduced grip or increased air density, must only be applied after the baseline vehicle passes physics and realism validation gates, and must produce expected directional effects without violating those realism constraints.",
+    "heading_level": 2
+  },
+  {
+    "file": "Scenario-Separation.md",
+    "section": "Assumptions and limits",
+    "summary": "The section outlines the compact scope of the current scenario support, noting that grip and air-density scaling are simplified representations of track condition and weather, while detailed effects like tyre temperature, water film, wind, and transient weather are excluded from the core model.",
+    "heading_level": 2
+  },
+  {
+    "file": "Scenario-Separation.md",
+    "section": "Verification checks",
+    "summary": "The section on verification checks provides commands for running unit tests on falsification and scenario contracts and executing an A/B test suite with specific track configurations, variant settings, and milestone gates (3-6) to validate simulation outputs against defined performance thresholds.",
+    "heading_level": 2
+  },
+  {
+    "file": "Scenario-Separation.md",
+    "section": "Next lesson",
+    "summary": "The \"Next lesson\" section links to the main Lessons Index page, providing navigation to the next topic after a specific module is completed.",
+    "heading_level": 2
+  },
+  {
+    "file": "Scenario-Separation.md",
+    "section": "Related lessons",
+    "summary": "The Related Lessons section lists links to key resources for calibration, validation, diagnostics, real versus simulated vehicle analysis, and the main lessons index.",
+    "heading_level": 2
+  },
+  {
+    "file": "Simulator-Basics.md",
+    "section": "Read this after",
+    "summary": "The section titled \"Read this after\" serves as the starting point for new users of the Formula Student lap time simulator.",
+    "heading_level": 2
+  },
+  {
+    "file": "Simulator-Basics.md",
+    "section": "Audience",
+    "summary": "The section defines the intended readership of the note as newcomers seeking an introductory, high-level understanding of the lap time simulator.",
+    "heading_level": 2
+  },
+  {
+    "file": "Simulator-Basics.md",
+    "section": "Goal",
+    "summary": "The section defines the simulator’s objective of calculating a single lap time by combining tyre, powertrain, aero, and constraint parameters, while also clarifying the project-specific meanings of \"quasi static\" (simulating a series of discrete, balanced states) and \"steady state\" (assuming constant velocity or equilibrium conditions at each simulation step).",
+    "heading_level": 2
+  },
+  {
+    "file": "Simulator-Basics.md",
+    "section": "What is a simulator trying to do",
+    "summary": "A Formula Student lap time simulator takes vehicle parameters, track geometry, and tyre and powertrain maps as inputs to produce a speed profile, lap time estimate, and diagnostic data explaining speed limitations at each segment, serving as a decision support tool rather than a replacement for real testing.",
+    "heading_level": 2
+  },
+  {
+    "file": "Simulator-Basics.md",
+    "section": "What quasi static means here",
+    "summary": "Quasi static in this context means the simulator models each local point as near equilibrium, using compact algebraic relations for loads and forces without integrating full transient dynamics for suspension or tyre thermal states, chosen because the approach is fast, stable, and simple for parameter sweeps and debugging.",
+    "heading_level": 2
+  },
+  {
+    "file": "Simulator-Basics.md",
+    "section": "What steady state means here",
+    "summary": "The section defines steady state as the condition where force and moment balances are solved locally for a point without rapid change, specifies its application in corner analysis through lateral and yaw balance with current tyre forces, and distinguishes it from quasi-static modelling, which treats the lap as a flipbook of separate frames, each solved under steady-state assumptions.",
+    "heading_level": 2
+  },
+  {
+    "file": "Simulator-Basics.md",
+    "section": "How we combine subsystems into one simulator",
+    "summary": "The section outlines the step-by-step runtime process for combining subsystems into a single simulator, starting with loading vehicle parameters and model configuration, building the tyre and powertrain models, constructing the vehicle object, solving for corner-limited speed, performing forward acceleration and backward braking passes, and finally combining all constraints to generate the speed profile and lap time output.",
+    "heading_level": 2
+  },
+  {
+    "file": "Simulator-Basics.md",
+    "section": "A compact force picture",
+    "summary": "The section introduces a compact longitudinal force calculation for each track segment, where net longitudinal force is determined by the minimum of powertrain request and tyre grip limit, minus drag, with contributions from the tyre, powertrain, geometry, and aero models.",
+    "heading_level": 2
+  },
+  {
+    "file": "Simulator-Basics.md",
+    "section": "Tradeoffs when using this simulator",
+    "summary": "The simulator excels at fast iterative design studies with transparent equations, but its limitations include the lack of full transient multi-body simulation, limited tyre thermal and suspension transient modelling, and reliance on map quality, so results should primarily be used for trends and deltas and validated with higher-fidelity tools.",
+    "heading_level": 2
+  },
+  {
+    "file": "Simulator-Basics.md",
+    "section": "Suggested reading order",
+    "summary": "The section outlines a recommended sequential reading order for the knowledge base, starting with foundational model introductions and progressing through vehicle modelling, the core simulator, diagnostics, and track geometry, with an optional deep dive into the tyre model.",
+    "heading_level": 2
+  },
+  {
+    "file": "Simulator-Basics.md",
+    "section": "Next lesson",
+    "summary": "The \"Next lesson\" section provides a single link to the introduction page for the tyre model, guiding users to the subsequent topic in the simulator knowledge base.",
+    "heading_level": 2
+  },
+  {
+    "file": "Simulator-Basics.md",
+    "section": "Related lessons",
+    "summary": "The Related Lessons section provides direct links to the lesson index, the parameter enforcement audit roadmap, and the major change log.",
+    "heading_level": 2
+  },
+  {
+    "file": "simulator-summary.md",
+    "section": "Read this after",
+    "summary": "The section titled \"Read this after\" lists the prerequisite documents that should be reviewed before engaging with the subsequent content, including the simulator basics, tyre, powertrain, aerodynamics, and vehicle modelling introductions.",
+    "heading_level": 2
+  },
+  {
+    "file": "simulator-summary.md",
+    "section": "Goal",
+    "summary": "The section outlines the overall operation of the lap time simulator and provides both a high-level and detailed mathematical explanation of the core corner solver.",
+    "heading_level": 2
+  },
+  {
+    "file": "simulator-summary.md",
+    "section": "Equation source for this page",
+    "summary": "The section titled \"Equation source for this page\" identifies the primary derivation reference as a specific PDF draft on quasi-static steady-state lap time simulation and confirms that the lesson retains its core equations and variable meanings.",
+    "heading_level": 2
+  },
+  {
+    "file": "simulator-summary.md",
+    "section": "High-level simulator run summary",
+    "summary": "The simulator runtime executes a chained solve across three passes—corner-feasible speed, forward acceleration, and backward braking—to produce final speed profiles, lap times, and g channels.",
+    "heading_level": 2
+  },
+  {
+    "file": "simulator-summary.md",
+    "section": "How this captures forces from prior lessons",
+    "summary": "The section explains how the lap time simulator integrates tyre forces, powertrain traction, aerodynamic drag, downforce, load transfer, and combined force budgeting into a unified vehicle dynamics model.",
+    "heading_level": 2
+  },
+  {
+    "file": "simulator-summary.md",
+    "section": "Core corner solver high-level view",
+    "summary": "The core corner solver iterates over candidate speeds as an outer loop, solving for steer angle and sideslip in an inner loop to satisfy lateral force and yaw moment balance, then checks the solution’s feasibility and stability to identify the maximum achievable speed at a given track point.",
+    "heading_level": 2
+  },
+  {
+    "file": "simulator-summary.md",
+    "section": "Core corner solver low-level math",
+    "summary": "The core corner solver low-level math establishes the governing equations for steering angle $\\delta$ and sideslip angle $\\beta$, the slip-angle relations, the force and moment equilibrium, and the rollover speed cap used in the corner search.",
+    "heading_level": 2
+  },
+  {
+    "file": "simulator-summary.md",
+    "section": "Draft equation mapping table",
+    "summary": "The section contains a table that maps Formula Student draft equations to their corresponding production code variables, units, and runtime paths in the simulator's source files.",
+    "heading_level": 2
+  },
+  {
+    "file": "simulator-summary.md",
+    "section": "How optimization is done in code",
+    "summary": "The corner solver uses a two-layer search with a physical upper bound from caps, an outer bisection loop on speed, and an inner nonlinear root solve for δ and β, accepting solutions only when residual checks and state bounds pass, with warm-starting, scale-aware thresholds, sanity bounds, and a constrained fallback speed if no feasible equilibrium is found, while the production path extends the draft by using",
+    "heading_level": 2
+  },
+  {
+    "file": "simulator-summary.md",
+    "section": "Residuals and fallback telemetry from current run",
+    "summary": "The section covers the evaluation of corner solver performance by displaying relative residuals, fallback counts from the current run, and interpreting low residuals as tight equilibrium satisfaction while fallback points indicate solver failure to find a feasible state.",
+    "heading_level": 2
+  },
+  {
+    "file": "simulator-summary.md",
+    "section": "Final profile combine and lap integration",
+    "summary": "The final combine and lap integration section explains that the final speed profile is determined as the lower envelope of forward and backward constrained passes, which is then used to compute the lap integration channels.",
+    "heading_level": 2
+  },
+  {
+    "file": "simulator-summary.md",
+    "section": "Practical trust checklist",
+    "summary": "To trust small lap time improvements in simulator results, the practical trust checklist requires verifying four specific diagnostic areas: low corner fallback counts, clean residual telemetry, appropriate limiter mode mixing, and healthy model flags without non-physical loads or heavy clamping.",
+    "heading_level": 2
+  },
+  {
+    "file": "simulator-summary.md",
+    "section": "Next lesson",
+    "summary": "The \"Next lesson\" section directs users to the \"Vehicle Modelling Diagnostics and Trust Checks\" guide as the subsequent topic to study after completing the current material.",
+    "heading_level": 2
+  },
+  {
+    "file": "simulator-summary.md",
+    "section": "Related lessons",
+    "summary": "The Related Lessons section lists key guides and resources for building and validating a vehicle model, sampling track geometry for dynamics analysis, and navigating the broader lesson index.",
+    "heading_level": 2
+  },
+  {
+    "file": "Track-Geometry-and-Sampling.md",
+    "section": "Read this after",
+    "summary": "Read the \"Vehicle Analysis IRL vs Simulator and GG Envelope\" document first, as this section provides instructions on the recommended reading order for the knowledge base.",
+    "heading_level": 2
+  },
+  {
+    "file": "Track-Geometry-and-Sampling.md",
+    "section": "Goal",
+    "summary": "The goal section outlines that the reader will learn how the simulator translates a track file into vehicle dynamics inputs, understand the impact of point spacing on curvature and acceleration channels, and identify quick verification checks to ensure lap deltas are reliable.",
+    "heading_level": 2
+  },
+  {
+    "file": "Track-Geometry-and-Sampling.md",
+    "section": "When to worry about sampling quality",
+    "summary": "Red flags for poor sampling quality include a large spacing spread where the maximum distance between samples exceeds five times the median, a large closure gap exceeding one percent of total track length on a closed track, and an isolated curvature spike without a matching geometric reason.",
+    "heading_level": 2
+  },
+  {
+    "file": "Track-Geometry-and-Sampling.md",
+    "section": "One minute mental model",
+    "summary": "The one-minute mental model explains that the simulator computes lap times by solving along discrete, sampled track points—each storing distance, curvature, heading, and elevation angle—rather than on a continuous curve, making the speed profile directly dependent on track geometry quality and point spacing.",
+    "heading_level": 2
+  },
+  {
+    "file": "Track-Geometry-and-Sampling.md",
+    "section": "How the track file becomes VD inputs",
+    "summary": "The section explains the process by which the track loader reads x, y, z coordinate points from a track file and computes geometric channels like cumulative distance, curvature, headings, and elevation angles to generate Vehicle Dynamics (VD) inputs.",
+    "heading_level": 2
+  },
+  {
+    "file": "Track-Geometry-and-Sampling.md",
+    "section": "Visual 1 track shape and sampled points",
+    "summary": "The section describes how the lap time simulator uses non-uniformly spaced sampled track points rather than a continuous spline, with the first and last points positioned close but not identical to each other.",
+    "heading_level": 2
+  },
+  {
+    "file": "Track-Geometry-and-Sampling.md",
+    "section": "Visual 2 spacing and curvature along distance",
+    "summary": "The section covers the relationship between visual 2 spacing and curvature along the track, detailing how uneven segment lengths (ranging from 1.210 m to 15.952 m) and peak curvature values produce noisy curvature estimates that affect critical calculations like the corner relation and local speed limits.",
+    "heading_level": 2
+  },
+  {
+    "file": "Track-Geometry-and-Sampling.md",
+    "section": "Visual 3 why segment length affects longitudinal g estimate",
+    "summary": "The section explains how using a smaller segment length (ds) in the lap loop's longitudinal g calculation produces a larger g estimate for the same speed change, demonstrating why segment spacing quality is important for telemetry interpretation.",
+    "heading_level": 2
+  },
+  {
+    "file": "Track-Geometry-and-Sampling.md",
+    "section": "Quick trust checks before tuning",
+    "summary": "The section outlines four diagnostic checks for verifying track data integrity—examining segment length outliers, curvature spikes, and noise-induced lap deltas before tuning begins.",
+    "heading_level": 2
+  },
+  {
+    "file": "Track-Geometry-and-Sampling.md",
+    "section": "Limits of this page",
+    "summary": "The section specifies that the page covers only geometry and sampling effects, excluding full filtering and advanced track reconstruction methods.",
+    "heading_level": 2
+  },
+  {
+    "file": "Track-Geometry-and-Sampling.md",
+    "section": "Next lesson",
+    "summary": "The \"Next lesson\" section links back to the [Lessons Index](README.md) to allow users to navigate to the main list of all available lessons.",
+    "heading_level": 2
+  },
+  {
+    "file": "Track-Geometry-and-Sampling.md",
+    "section": "Related lessons",
+    "summary": "The Related Lessons section lists links to additional resources covering simulator fundamentals, core solver logic, vehicle modelling, diagnostics, real-world versus simulator analysis, and the full lesson index for the Formula Student lap time simulator knowledge base.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model-Deep-Dive.md",
+    "section": "Read this after",
+    "summary": "After reading the foundational sections on simulator basics and tyre model introduction, this section provides the recommended next steps for understanding the lap time simulator's subsequent topics and workflow.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model-Deep-Dive.md",
+    "section": "Audience",
+    "summary": "Designed for readers who have completed the Simulator Basics and Tyre Model Intro guides, this section identifies its target audience as those with foundational knowledge in those areas.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model-Deep-Dive.md",
+    "section": "Goal",
+    "summary": "The section provides a detailed technical explanation of the tyre force representation in the repository, including the main equations, runtime execution path, and current modeling limitations.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model-Deep-Dive.md",
+    "section": "First principles reminder",
+    "summary": "The section reviews the first-principles calculation of net force and moment as area integrals over the contact patch traction distribution, and notes that the lap solver predominantly uses in-plane force components and their resultant magnitude.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model-Deep-Dive.md",
+    "section": "Magic Formula context",
+    "summary": "The Magic Formula context section describes the Pacejka empirical tyre model, which uses a specific sine-arctan equation with parameters D, B, C, and E to fit measured pure slip force data without deriving from contact patch mechanics.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model-Deep-Dive.md",
+    "section": "Runtime path in this repository",
+    "summary": "The runtime path section details the primary implementation path from parameter loading in vehicle.py, through tyre model creation and force calculation, to consumption of limits in equilibrium and longitudinal passes, along with related solver paths.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model-Deep-Dive.md",
+    "section": "Load sensitivity and base_mu",
+    "summary": "The section describes how the model applies load-dependent peak interpolation using a `base_mu` scale factor to shift force capacity from TTC-style dataset reference friction levels while preserving the shape of the original curve families.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model-Deep-Dive.md",
+    "section": "Combined slip treatment",
+    "summary": "The combined slip treatment section describes a capped resultant approach that computes pure channel forces first, checks if the total demand exceeds a load-dependent cap, and scales both channels equally to preserve vector direction while enforcing a consistent force budget.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model-Deep-Dive.md",
+    "section": "Worked numeric example",
+    "summary": "A step-by-step example demonstrating how to cap a combined tire force demand using a friction ellipse scaling approach, showing the calculation of a 4610 N force cap, a 4964 N total demand, and a 0.929 scale factor applied to reduce longitudinal and lateral forces to 2973 N and 3530 N respectively.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model-Deep-Dive.md",
+    "section": "Effective loaded radius note",
+    "summary": "The section explains that using an unloaded wheel radius in slip and kinematic calculations can cause errors in speed-to-RPM and slip computations, so the project assumes the wheel radius represents the effective loaded radius.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model-Deep-Dive.md",
+    "section": "Validation and guardrails",
+    "summary": "The validation and guardrails section outlines tests and typical checks for tyre model behavior, including zero and limiting behavior, out-of-domain counters, clamping or flagging outside the validity domain, RMSE validation, high-load growth behavior, and sensitivity gates, with a specific gate for the peak-load-clamped variant to prevent unrealistic extrapolation of tyre force beyond the measured load range.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model-Deep-Dive.md",
+    "section": "Known limits",
+    "summary": "The section explicitly lists deliberate omissions—such as relaxation length, full temperature and pressure dynamics, aligning moment, and carcass dynamics—representing tradeoffs made to prioritize simulation speed and robustness during lap time sweeps.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model-Deep-Dive.md",
+    "section": "Next lesson",
+    "summary": "The \"Next lesson\" section links to the Powertrain Model and Wheel Force Flow document, which covers how wheel forces are transmitted through the powertrain components.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model-Deep-Dive.md",
+    "section": "Related lessons",
+    "summary": "The Related Lessons section lists prerequisite knowledge modules, including tyre, powertrain, load transfer, braking dynamics, and validation workflows, that form the foundation for understanding the lap time simulator.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model-Deep-Dive.md",
+    "section": "References",
+    "summary": "The section lists key resources for tire modeling in Formula Student lap time simulation, including Pacejka's foundational book, the 1987 SAE paper on the Magic Formula, and supplementary technical references on the topic.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model.md",
+    "section": "Read this after",
+    "summary": "[Simulator Basics](Simulator-Basics.md) should be read first, as this section serves as a prerequisite guide indicating the foundational reading material required before proceeding.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model.md",
+    "section": "Audience",
+    "summary": "The Audience section identifies that the note is intended for new readers.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model.md",
+    "section": "Goal",
+    "summary": "The section defines the learning objectives for understanding the tyre model, including its purpose, the key inputs that generate tyre force, the roles of `base_mu` and `wheel_radius`, and how the simulator utilizes tyre force.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model.md",
+    "section": "One minute mental model",
+    "summary": "The tyre model converts slip ratio and normal load into the maximum physically possible contact patch force, which the solver then uses to move the car.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model.md",
+    "section": "Slip angle",
+    "summary": "The section defines slip angle as the difference between the wheel's heading and its actual direction of travel, and explains how lateral force increases with slip angle up to a saturation point, as demonstrated by a tyre model plot at a fixed 900 N normal load.",
+    "heading_level": 3
+  },
+  {
+    "file": "Tyre-Model.md",
+    "section": "Slip ratio",
+    "summary": "The section defines slip ratio as the comparison between wheel circumferential speed and vehicle forward speed, explains its typical ranges (near zero for free rolling, positive for drive slip, negative for brake slip), describes the saturation behavior of force, and references a figure generated by the simulator's tyre model.",
+    "heading_level": 3
+  },
+  {
+    "file": "Tyre-Model.md",
+    "section": "Start from real behaviour",
+    "summary": "The section explains the nonlinear behavior of tyre force, which initially increases with slip up to a peak before saturating, using a rubber eraser analogy to illustrate why tyre models cannot assume linear force growth.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model.md",
+    "section": "Inputs and outputs in this simulator",
+    "summary": "The section covers the inputs (slip angle, slip ratio, and normal load per tyre) and outputs (lateral force, longitudinal force, and a combined limited force pair) used in the simulator's tyre model, along with its implementation file.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model.md",
+    "section": "Why literature uses Pacejka style curves",
+    "summary": "Literature recommends Pacejka style curves because their empirical structure, with parameters for slip, load scaling, and shape, effectively fits measured tyre data to model force generation.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model.md",
+    "section": "Where base_mu fits",
+    "summary": "The section explains that `base_mu` acts as a global grip volume knob, scaling the entire tyre force capability up or down for a given tyre curve family.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model.md",
+    "section": "Where wheel_radius fits and why loaded radius matters",
+    "summary": "The section explains that `wheel_radius` is used in kinematics and powertrain conversion to link wheel speed, engine speed, and torque to contact patch force, and emphasizes that using the loaded effective radius—rather than the free static geometric radius—is a more accurate assumption for simulation because it better reflects real rolling behavior under load, analogous to a basketball deforming under a person's weight.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model.md",
+    "section": "How tyre force is used in this simulator",
+    "summary": "The section details the five-step process for computing net longitudinal tyre force, including powertrain demand, tyre slip and load limits, lateral grip consumption, drag subtraction, and corner-solving integration.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model.md",
+    "section": "What this intro does not cover",
+    "summary": "The intro page intentionally avoids equations, combined slip details, and model limits, directing readers to a separate deep dive document for that information.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model.md",
+    "section": "Next lesson",
+    "summary": "The Next lesson section directs readers to the next topic, which covers the Powertrain Model and how forces are transmitted through the wheels in a Formula Student vehicle.",
+    "heading_level": 2
+  },
+  {
+    "file": "Tyre-Model.md",
+    "section": "Related lessons",
+    "summary": "The Related Lessons section links to supporting modules covering simulator basics, powertrain and aerodynamics models, vehicle modelling and diagnostics, track geometry, a tyre model deep dive, and an overall lessons index.",
+    "heading_level": 2
+  },
+  {
+    "file": "Validation-and-Falsification-Workflow.md",
+    "section": "Read this after",
+    "summary": "After confirming trust in vehicle model parameters through the diagnostics guide, this section provides instructions on using \"simulate run\" and \"Simulink Fast Run\" workflows for performing sweeps and extracting lap times.",
+    "heading_level": 2
+  },
+  {
+    "file": "Validation-and-Falsification-Workflow.md",
+    "section": "Goal",
+    "summary": "The section explains how to validate the simulator layer by layer using falsification cases to challenge assumptions, while warning against trusting outputs that appear plausible but lack supporting evidence.",
+    "heading_level": 2
+  },
+  {
+    "file": "Validation-and-Falsification-Workflow.md",
+    "section": "One minute mental model",
+    "summary": "Validation is structured as a hierarchical process of increasingly integrated tests—local, synthetic, and full-lap—guided by a mindset of falsification to proactively expose assumptions.",
+    "heading_level": 2
+  },
+  {
+    "file": "Validation-and-Falsification-Workflow.md",
+    "section": "Layer A component contracts",
+    "summary": "Layer A component contracts verify small, known-behavior components through tests like tyre force invariants and solver limiting cases, ensuring any failure is localized to a single subsystem.",
+    "heading_level": 2
+  },
+  {
+    "file": "Validation-and-Falsification-Workflow.md",
+    "section": "Layer B synthetic maneuvers",
+    "summary": "Layer B synthetic maneuvers consist of simple, directionally predictable driving scenarios—such as straight-line acceleration, braking, constant-radius cornering, and skidpad-style tracks—that are designed to detect wrong signs and stale parameters more quickly than a full lap simulation.",
+    "heading_level": 2
+  },
+  {
+    "file": "Validation-and-Falsification-Workflow.md",
+    "section": "Layer C full-lap realism",
+    "summary": "Layer C full-lap realism validates the integrated simulator system on representative tracks by measuring outputs like lap time, peak lateral and total g, solver success rate, tyre and load anomalies, limiter usage, and the GG envelope shape.",
+    "heading_level": 2
+  },
+  {
+    "file": "Validation-and-Falsification-Workflow.md",
+    "section": "Falsification examples",
+    "summary": "The section on falsification examples details expected failure cases in the Formula Student lap time simulator, such as invalid speed bounds, degenerate track segments, and protected base vehicle parameters, with corresponding tests located in a specific test file.",
+    "heading_level": 2
+  },
+  {
+    "file": "Validation-and-Falsification-Workflow.md",
+    "section": "Documentation and chat evals",
+    "summary": "The Documentation and chat evals section covers the documentation evaluation harness that validates whether readers or chat assistants can answer simulator questions from the docs, along with guidance for troubleshooting confident but incorrect answers from DeepSeek and defining the documentation readiness gates required for passing static checks, QA evals, grounded source citations, and zero critical hallucinations.",
+    "heading_level": 2
+  },
+  {
+    "file": "Validation-and-Falsification-Workflow.md",
+    "section": "Standard hard-gate command",
+    "summary": "The standard hard-gate command runs a Milestone 5 style execution involving unit tests for various tyre and solver contracts, followed by an A/B testing suite across specified tracks using baseline variants and applying all milestone gates with defined threshold and g-force limits.",
+    "heading_level": 2
+  },
+  {
+    "file": "Validation-and-Falsification-Workflow.md",
+    "section": "Assumptions and limits",
+    "summary": "The section outlines key limitations of the simulation's validation through \"gates,\" stressing that passing these tests only confirms the model works for declared scenarios, not universal correctness, and that real data is the primary check, with hierarchical debugging required when a full-lap gate fails.",
+    "heading_level": 2
+  },
+  {
+    "file": "Validation-and-Falsification-Workflow.md",
+    "section": "Next lesson",
+    "summary": "The 'Next lesson' section directs users to the Calibration and Sensitivity Workflow document, which outlines the process for fine-tuning and analyzing the simulator's response to input parameters.",
+    "heading_level": 2
+  },
+  {
+    "file": "Validation-and-Falsification-Workflow.md",
+    "section": "Related lessons",
+    "summary": "The \"Related lessons\" section provides a list of internal resources covering vehicle modelling diagnostics, real-world versus simulator analysis, track geometry, and scenario separation.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Analysis-IRL-vs-Simulator.md",
+    "section": "Read this after",
+    "summary": "Following the initial vehicle modelling diagnostics and trust checks, this section provides guidance on interpreting simulation results to iteratively refine the vehicle model's accuracy and validate its performance predictions.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Analysis-IRL-vs-Simulator.md",
+    "section": "Goal",
+    "summary": "The GG envelope plot serves as a compact diagnostic tool for rapidly comparing real vehicle behavior with simulator behavior.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Analysis-IRL-vs-Simulator.md",
+    "section": "What a GG envelope is",
+    "summary": "A GG envelope is a scatter plot showing the relationship between longitudinal and lateral acceleration in g units, where each point represents a sampled vehicle state, with lateral g on the x-axis and longitudinal g on the y-axis, and the outer boundary indicates the combined acceleration capability actually used.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Analysis-IRL-vs-Simulator.md",
+    "section": "Why this helps with IRL vs simulator work",
+    "summary": "The section explains how a GG envelope simplifies lap performance into a single shape, enabling quick diagnostic checks for discrepancies between real-world car data and simulator predictions, such as braking strength, traction, lateral grip, and balance changes.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Analysis-IRL-vs-Simulator.md",
+    "section": "IRL data path",
+    "summary": "The IRL data path section outlines the step-by-step process for processing and converting telemetry acceleration data into a g-g diagram, by exporting, unit-converting, spike-filtering, and plotting lateral vs. longitudinal acceleration.",
+    "heading_level": 3
+  },
+  {
+    "file": "Vehicle-Analysis-IRL-vs-Simulator.md",
+    "section": "Simulator data path",
+    "summary": "The section covers the process for running a diagnostic lap simulation, extracting g‑force channels with consistent units and sign conventions, and plotting the simulator’s gg‑diagram and boundary overlaid with real vehicle data for direct comparison.",
+    "heading_level": 3
+  },
+  {
+    "file": "Vehicle-Analysis-IRL-vs-Simulator.md",
+    "section": "GG envelope diagram from simulator run",
+    "summary": "The GG envelope diagram from the simulator run shows a two-panel plot comparing the used acceleration envelope (left) against a larger static-load tyre-cap reference ellipse (right), generated by a specific pipeline of Python scripts that produce diagnostic CSVs and PNG images.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Analysis-IRL-vs-Simulator.md",
+    "section": "How to read common mismatch patterns",
+    "summary": "The section explains how to identify which subsystem to inspect first by analyzing the direction of the gap between simulator and real GG envelopes during mismatch diagnostics.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Analysis-IRL-vs-Simulator.md",
+    "section": "Braking side mismatch",
+    "summary": "The section covers how a simulator extending further into negative longitudinal acceleration (\\(g_x\\)) at comparable lateral acceleration magnitudes (\\(|g_y|\\)) indicates potentially excessive braking authority assumed in the vehicle model.",
+    "heading_level": 3
+  },
+  {
+    "file": "Vehicle-Analysis-IRL-vs-Simulator.md",
+    "section": "Traction side mismatch",
+    "summary": "A traction side mismatch occurs when the simulator shows excessive longitudinal acceleration at low lateral acceleration, indicating that the powertrain or longitudinal tyre limits are set too high.",
+    "heading_level": 3
+  },
+  {
+    "file": "Vehicle-Analysis-IRL-vs-Simulator.md",
+    "section": "Lateral mismatch",
+    "summary": "It covers how a lateral mismatch, where the simulator predicts a wider gy envelope than reality, may be caused by overly optimistic assumptions about lateral tyre limits, load transfer, or aerodynamics.",
+    "heading_level": 3
+  },
+  {
+    "file": "Vehicle-Analysis-IRL-vs-Simulator.md",
+    "section": "Asymmetry clues",
+    "summary": "Asymmetry clues identify that real-world left and right discrepancies from setup, camber, surface, and driver effects are often masked by a symmetric simulator envelope.",
+    "heading_level": 3
+  },
+  {
+    "file": "Vehicle-Analysis-IRL-vs-Simulator.md",
+    "section": "Quick comparison checklist",
+    "summary": "The Quick comparison checklist section outlines five specific steps for validating simulation results, including aligning units, assessing boundary trends, comparing by speed bands, verifying input assumptions, and linking performance envelope discrepancies to diagnostic data.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Analysis-IRL-vs-Simulator.md",
+    "section": "Limits",
+    "summary": "The GG envelope provides a holistic summary of vehicle performance limits but must be paired with a speed trace, limiter modes, and solver diagnostics to identify the underlying causes of those limits.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Analysis-IRL-vs-Simulator.md",
+    "section": "Next lesson",
+    "summary": "The section titled \"Next lesson\" links to a resource on track geometry and sampling, indicating that this topic is the subsequent learning module in the simulator knowledge base.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Analysis-IRL-vs-Simulator.md",
+    "section": "Related lessons",
+    "summary": "The Related Lessons section lists three prerequisite documents covering vehicle modeling diagnostics, the core solver, and the capstone vehicle modeling topic.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling-Diagnostics.md",
+    "section": "Read this after",
+    "summary": "The section \"Read this after\" contains links to two foundational documents, a vehicle modelling capstone and the simulator summary with core solver, that should be reviewed before reading the main content.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling-Diagnostics.md",
+    "section": "Goal",
+    "summary": "The section outlines methods for validating lap time simulation results to ensure their credibility prior to applying them to vehicle setup or design decisions.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling-Diagnostics.md",
+    "section": "Why this page exists",
+    "summary": "This page explains how to interpret lap simulation outputs to assess their believability and identify the next vehicle parameters to adjust for improvement.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling-Diagnostics.md",
+    "section": "Quick engineer checklist",
+    "summary": "The quick engineer checklist provides five specific diagnostic checks—limited speed frequency, corner solver confidence, friction budget behavior, load and clamp health flags, and lap time integration channels—to validate simulator performance and identify modeling issues.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling-Diagnostics.md",
+    "section": "Figure set for this page",
+    "summary": "The section specifies the script path, inputs, and outputs used to generate all figures on the page from a single script run.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling-Diagnostics.md",
+    "section": "1. What limited this lap",
+    "summary": "The section explains how the solver identifies performance constraints by logging limiter modes at each sampled point, producing a map that reveals whether speed is limited by power, traction, braking, cornering equilibrium, or lateral saturation.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling-Diagnostics.md",
+    "section": "2. Corner solver confidence",
+    "summary": "The section covers the corner solver confidence system, which tracks whether the simulator's first pass successfully converges on a corner equilibrium solution or resorts to a constrained fallback speed, using counters such as success points and fallback points to monitor solver stability.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling-Diagnostics.md",
+    "section": "3. Friction budget coupling in accel and braking",
+    "summary": "Section 3 covers the friction budget coupling in acceleration and braking, explaining how the tyre model allocates total force capacity between lateral and longitudinal demands, with a core formula showing available longitudinal force as a product of longitudinal capacity and a budget scale that decreases as cornering demand increases.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling-Diagnostics.md",
+    "section": "4. Why drag helps braking in this model",
+    "summary": "Drag aids braking in this model because it is applied as an additional deceleration term outside the tyre friction circle, allowing more braking force than the friction limit alone would permit.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling-Diagnostics.md",
+    "section": "5. Model health flags you should always check",
+    "summary": "Section 5 covers three key model health flags to monitor: non-zero non-physical load events as red flags, high normal load transfer clamp events as warnings about stressed load transfer assumptions, and the use of recorded guardrail events to detect when the run approaches model limits.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling-Diagnostics.md",
+    "section": "6. How lap time is actually integrated",
+    "summary": "Lap time is integrated segment by segment from the final speed profile, with the same loop computing longitudinal g as `(v_curr² - v_prev²)/(2*ds)/9.81` and lateral g as `v_curr² * curvature / 9.81`.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling-Diagnostics.md",
+    "section": "Suggested tuning workflow",
+    "summary": "The section outlines a five-step tuning workflow for a Formula Student lap time simulator, emphasizing the need to establish a baseline, identify performance bottlenecks via limiter mode counts, verify corner health before trusting small lap time improvements, and evaluate changes by comparing both the limiter mix and lap time together.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling-Diagnostics.md",
+    "section": "Next lesson",
+    "summary": "The \"Next lesson\" section links to a resource covering the comparison of real-world vehicle analysis against simulator data, specifically focusing on the GG envelope.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling-Diagnostics.md",
+    "section": "Related lessons",
+    "summary": "The Related Lessons section lists prerequisite or supplementary educational resources for understanding the lap time simulator, including guides on vehicle modelling, the core solver, real vs. simulated vehicle analysis, track geometry, aerodynamics, and tyre modelling.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling.md",
+    "section": "Read this after",
+    "summary": "The section instructs the user to read two specific pages on load transfer and braking dynamics before proceeding.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling.md",
+    "section": "Goal",
+    "summary": "The section details the method by which local cornering, acceleration, and braking constraints are integrated to generate a single, final speed profile and resulting lap time.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling.md",
+    "section": "What you will learn",
+    "summary": "The section outlines the key concepts covered, including the purpose of each simulation pass, the method for selecting final speed, the visual discrepancy where the black line appears lower than all colored lines, and the locations of the relevant code and tests.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling.md",
+    "section": "High-level overview of the sim",
+    "summary": "The section explains the three-pass solver approach in a Formula Student lap time simulator, where Pass 1 applies a cornering speed ceiling, Pass 2 calculates achievable acceleration from the previous point, and Pass 3 determines required braking for upcoming points, with the final speed at each track point being the minimum of these constraints, implemented in code as a point-by-point minimum between Pass 2 and Pass",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling.md",
+    "section": "The sim visually",
+    "summary": "The section covers the visual and computational outputs of the speed envelope simulator, specifying the inputs (track, model variant, and solver flow), the process for combining the passes, and the resulting lap time of 69.733 s with a worked segment at 213.93 m.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling.md",
+    "section": "Worked example",
+    "summary": "The worked example demonstrates how each pass in the three pass method sequentially limits the final speed—from 200.00 m/s to 33.30 m/s to 13.25 m/s—to enforce backward braking constraints before an upcoming corner.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling.md",
+    "section": "Why the black line can look lower than every pass",
+    "summary": "The section explains that the black line appearing below all colored passes is a visual artifact caused by joining sampled points with straight lines during limiter handoffs between adjacent points, not an additional realism filter.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling.md",
+    "section": "What happens near the start and end points",
+    "summary": "The section explains how the forward and backward speed passes begin at opposite ends of the point list, which causes the active speed limiter near the track boundaries to vary unpredictably, and clarifies that the pass loops operate strictly within the listed points without adding a wraparound segment.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling.md",
+    "section": "Pass 1 corner limit",
+    "summary": "The Pass 1 corner limit section covers the initial calculation of maximum cornering speeds at each track point by solving lateral and yaw equilibrium equations constrained by tyre friction limits, using the relation a_y = v²κ.",
+    "heading_level": 3
+  },
+  {
+    "file": "Vehicle-Modelling.md",
+    "section": "Pass 2 forward acceleration limit",
+    "summary": "Pass 2 simulates forward acceleration by iterating from start to end, applying powertrain and tyre limits to compute net longitudinal force while also enforcing the acceleration constraints from the velocity profile.",
+    "heading_level": 3
+  },
+  {
+    "file": "Vehicle-Modelling.md",
+    "section": "Pass 3 backward braking limit",
+    "summary": "Pass 3 backward braking limit iterates from the end of the track to the start, calculating the maximum feasible speed at each point by taking the minimum of the forward pass speed and the speed achievable from the next point given a braking deceleration limit.",
+    "heading_level": 3
+  },
+  {
+    "file": "Vehicle-Modelling.md",
+    "section": "Final combine and lap time",
+    "summary": "The final speed profile is determined by taking the minimum of the forward and backward constrained profiles, with the implementation located in `calcSpeedProfile.py` and the lap time simulation run in `simulator.py`.",
+    "heading_level": 3
+  },
+  {
+    "file": "Vehicle-Modelling.md",
+    "section": "How the code runs step by step",
+    "summary": "The section outlines the five sequential phases of the lap time simulator's execution: building the models, calculating corner ceilings, propagating forward acceleration and backward braking, then combining results to integrate the final lap time.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling.md",
+    "section": "Assumptions and limits",
+    "summary": "The Assumptions and limits section defines the quasi-static, steady-state cornering model, including the fallback speed constraint for equilibrium solve failures, and explicitly excludes full suspension and tyre thermal transient states.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling.md",
+    "section": "How to verify this yourself",
+    "summary": "The \"How to verify this yourself\" section provides file paths to test scripts for solver and tyre force contracts, along with the diagnostics output from the `run_lap_time_simulation` function, as resources for independently validating the simulation's correctness.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling.md",
+    "section": "Next lesson",
+    "summary": "The section provides a link to the \"Simulator Summary and Core Solver\" page, which serves as the next lesson in the knowledge base.",
+    "heading_level": 2
+  },
+  {
+    "file": "Vehicle-Modelling.md",
+    "section": "Related lessons",
+    "summary": "The \"Related lessons\" section lists links to prerequisite and supplementary content, including introductory and deep-dive models for the tyre, powertrain, and aerodynamics, along with the simulator's core solver, diagnostics, and track geometry.",
+    "heading_level": 2
+  }
+]

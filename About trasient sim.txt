@@ -1,0 +1,33 @@
+LGR TRANSIENT SIMULATOR - DEVELOPMENT NOTES
+November 2026
+
+OVERVIEW
+An experimental transient model has been added alongside the existing quasi-static (QSS) lap time simulator. The QSS solver still provides a target speed profile; the new model simulates how the car responds over time while attempting to follow that profile and the racing line.
+
+WHAT HAS BEEN ADDED
+
+Transient vehicle model (transientDynamics.py)
+- VehicleState tracks longitudinal/lateral velocity, yaw rate, X/Y position and heading between timesteps.
+- A simplified dynamic bicycle model calculates tyre slip angles and forces, then updates the car's motion using fixed timesteps.
+- Throttle, braking, powertrain forces and aerodynamic drag determine longitudinal acceleration.
+- A simplified friction ellipse limits combined braking/acceleration and cornering forces, rather than treating grip in each direction independently.
+
+Controls and circuit integration
+- A Pure Pursuit controller steers towards a lookahead point on the existing racing line.
+- Current track progress is estimated by projecting the vehicle position onto the reference path.
+- Predictive throttle and braking controllers simulate several candidate inputs over short horizons and choose inputs using provisional speed, stability and path-following criteria. They are currently separate controllers.
+
+Outputs
+- Trajectory plot comparing the reference circuit against the simulated car.
+- Speed (actual versus QSS target), throttle/brake and path-error traces, plus yaw-rate and replay-time outputs.
+
+CURRENT STATUS / ASSUMPTIONS
+- The car can follow much of the FSUK circuit, but sometimes cuts corners or deviates from the path, and speed control is not yet consistent.
+- A recent replay reported about 74.33 s versus 70.07 s from QSS. This is NOT yet a validated lap time: completion uses estimated reference-track progress, not a verified finish-line crossing within track boundaries.
+- The model uses simplified planar dynamics, an estimated yaw inertia (100 kg m^2), approximate combined tyre grip and no detailed suspension or transient tyre relaxation. Behaviour during major spins or at very low forward speeds is unreliable.
+
+NEXT STEPS
+1. Combine throttle, coasting and braking into one predictive controller; investigate unnecessary braking and missed target speeds.
+2. Check the rapidly fluctuating QSS target speeds against track curvature.
+3. Improve steering/path following and implement reliable track-boundary and finish-line checks.
+4. Validate vehicle parameters and dynamics before attempting lap-time optimisation.

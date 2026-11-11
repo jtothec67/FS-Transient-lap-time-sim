@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LGR Sim Workbench</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+
+  <header class="top-bar">
+    <div class="top-bar-brand">
+      <span class="page-title">Leeds Gryphon Racing Lap Time Sim</span>
+      <span class="page-subtitle">Formula Student 2026</span>
+      <button type="button" class="scope-link" id="scopeOpenBtn">Model scope and limits</button>
+    </div>
+    <div class="top-bar-user">
+      <span class="user-bar-email" id="userBarEmail"></span>
+      <button class="user-bar-logout" id="userBarLogout" type="button">Sign out</button>
+    </div>
+  </header>
+
+  <nav class="tab-bar" role="tablist">
+    <button class="tab active" role="tab" id="tab-base-sim" data-tab="base-sim" aria-selected="true" aria-controls="base-sim">Base Simulator</button>
+    <button class="tab" role="tab" id="tab-sweeps" data-tab="sweeps" aria-selected="false" aria-controls="sweeps">Sweeps</button>
+    <button class="tab" role="tab" id="tab-tyres" data-tab="tyres" aria-selected="false" aria-controls="tyres">Tyres</button>
+    <button class="tab" role="tab" id="tab-aero" data-tab="aero" aria-selected="false" aria-controls="aero">Aerodynamics</button>
+    <button class="tab" role="tab" id="tab-powertrain" data-tab="powertrain" aria-selected="false" aria-controls="powertrain">Powertrain</button>
+    <button class="tab" role="tab" id="tab-energy" data-tab="energy" aria-selected="false" aria-controls="energy">Energy Management</button>
+    <button class="tab" role="tab" id="tab-validation" data-tab="validation" aria-selected="false" aria-controls="validation">Validation</button>
+    <button class="tab" role="tab" id="tab-lessons" data-tab="lessons" aria-selected="false" aria-controls="lessons">Lesson Guide</button>
+    <button id="askBtn" class="ask-btn">Ask</button>
+  </nav>
+
+  <main>
+
+    <section id="base-sim" class="tab-section active" role="tabpanel" aria-labelledby="tab-base-sim">
+      <div class="sim-panel">
+
+        <div class="panel inputs-panel">
+
+          <button id="runLapBtn">Run Simulation</button>
+
+          <div class="inner-tab-bar">
+            <button class="inner-tab active" data-inner-tab="params-tab">Parameters</button>
+            <button class="inner-tab" data-inner-tab="config-tab">Config</button>
+          </div>
+
+          <!-- Parameters tab -->
+          <div id="params-tab" class="inner-tab-section active">
+
+            <div class="field-section-header">General</div>
+            <label class="field-label">Name <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="A label for this configuration. Used only in output filenames, not in the physics.">i</button></label>
+            <input id="p-general-name" type="text" />
+            <div class="field-hint">e.g. F25_IC_Car</div>
+            <label class="field-label">Mass <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Total vehicle mass with driver, in kilograms. Lower mass means faster acceleration, smaller tyre load, and shorter braking distances.">i</button></label>
+            <input id="p-general-mass" type="text" />
+            <div class="field-hint">e.g. 320.0 · kg</div>
+            <label class="field-label">Base Mu <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Peak grip coefficient between tyre and track, dimensionless. Around 1.5 for slicks on a dry surface. Higher mu gives more cornering force and shorter braking.">i</button></label>
+            <input id="p-general-base_mu" type="text" />
+            <div class="field-hint">e.g. 1.5 · dimensionless</div>
+
+            <div class="field-section-header">Aerodynamics</div>
+            <label class="field-label">Frontal Area <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Projected area of the car seen from the front, in square metres. A larger area produces more drag and more downforce.">i</button></label>
+            <input id="p-aero-frontal_area" type="text" />
+            <div class="field-hint">e.g. 0.75 · m2</div>
+            <label class="field-label">Drag Coefficient <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="How cleanly air flows around the car, dimensionless. Lower drag means a higher top speed on long straights.">i</button></label>
+            <input id="p-aero-drag_coefficient" type="text" />
+            <div class="field-hint">e.g. 0.85 · dimensionless</div>
+            <label class="field-label">Downforce Coefficient <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="How strongly air pushes the car into the ground, dimensionless. Higher downforce adds cornering grip but always brings extra drag.">i</button></label>
+            <input id="p-aero-downforce_coefficient" type="text" />
+            <div class="field-hint">e.g. 0.07 · dimensionless</div>
+            <label class="field-label">Aero Centre of Pressure <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Where the net aero load acts along the car, in metres from the front axle. Moving it forward shifts more downforce to the front tyres and helps fast-corner turn-in.">i</button></label>
+            <input id="p-aero-aero_cp" type="text" />
+            <div class="field-hint">e.g. 1.0 · m from front axle</div>
+
+            <div class="field-section-header">Geometry</div>
+            <label class="field-label">Wheelbase <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Distance from the front axle to the rear axle, in metres. A longer wheelbase is more stable. A shorter wheelbase is more agile.">i</button></label>
+            <input id="p-geom-wheelbase" type="text" />
+            <div class="field-hint">e.g. 1.6 · m</div>
+            <label class="field-label">Front Track Width <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Distance between the left and right front tyres, in metres. A wider track resists rollover and reduces lateral load transfer at the front.">i</button></label>
+            <input id="p-geom-front_track_width" type="text" />
+            <div class="field-hint">e.g. 1.26 · m</div>
+            <label class="field-label">Rear Track Width <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Distance between the left and right rear tyres, in metres. Same role as front track but applied at the rear axle.">i</button></label>
+            <input id="p-geom-rear_track_width" type="text" />
+            <div class="field-hint">e.g. 1.23 · m</div>
+            <label class="field-label">CoG Z <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Height of the centre of gravity above the ground, in metres. A lower CoG reduces load transfer in corners and braking, which raises the grip limit.">i</button></label>
+            <input id="p-geom-cog_z" type="text" />
+            <div class="field-hint">e.g. 0.48 · m</div>
+            <label class="field-label">CoG Longitudinal Position <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Where the centre of gravity sits along the wheelbase, as a fraction from the front axle. 0.5 is even, below 0.5 is front-biased.">i</button></label>
+            <input id="p-geom-cog_longitudinal_pos" type="text" />
+            <div class="field-hint">e.g. 0.516 · fraction of wheelbase from front axle (0 to 1)</div>
+            <label class="field-label">Max CoG Z <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Upper safety limit for CoG height, in metres. Used by the rollover speed cap to flag unrealistic setups.">i</button></label>
+            <input id="p-geom-max_cog_z" type="text" />
+            <div class="field-hint">e.g. 0.6 · m</div>
+
+            <div class="field-section-header">Vehicle Dynamics</div>
+            <label class="field-label">Roll Stiffness <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Resistance of the chassis to body roll, in newton metres per radian. Stiffer keeps the car flatter in corners but can hurt mechanical grip on bumps.">i</button></label>
+            <input id="p-vd-roll_stiffness" type="text" />
+            <div class="field-hint">e.g. 21439.49 · Nm/rad</div>
+            <label class="field-label">Suspension Spring Stiffness <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Suspension spring rate, in newtons per metre. Fixed in this version of the solver.">i</button></label>
+            <input id="p-vd-suspension_stiffness" type="text" disabled />
+            <div class="field-hint">e.g. 21439 · N/m</div>
+            <label class="field-label">Damper Coefficient <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Shock absorber rate, in newton seconds per metre. Fixed in this version of the solver.">i</button></label>
+            <input id="p-vd-damping_coefficient" type="text" disabled />
+            <div class="field-hint">e.g. 0 · Ns/m</div>
+            <label class="field-label">Max Roll Angle <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Largest body roll the solver tolerates before flagging an unrealistic setup, in degrees.">i</button></label>
+            <input id="p-vd-max_roll_angle_deg" type="text" />
+            <div class="field-hint">e.g. 10 · deg</div>
+
+            <div class="field-section-header">Drivetrain</div>
+            <label class="field-label">Wheel Radius <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Effective rolling radius of the tyre, in metres. A larger radius lowers torque at the contact patch but raises top speed for the same engine speed.">i</button></label>
+            <input id="p-dt-wheel_radius" type="text" />
+            <div class="field-hint">e.g. 0.2032 · m (effective rolling radius)</div>
+            <label class="field-label">Final Drive Ratio <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Fixed gear between the gearbox output and the wheels, dimensionless. A higher ratio increases torque at the wheel but caps top speed sooner.">i</button></label>
+            <input id="p-dt-final_drive_ratio" type="text" />
+            <div class="field-hint">e.g. 2.6 · dimensionless</div>
+            <label class="field-label">Gear Ratios <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Internal gearbox ratios listed from first to top. A taller first gear gives a stronger launch. A shorter top gear extends top speed.">i</button></label>
+            <input id="p-dt-gear_ratios" type="text" />
+            <div class="field-hint">comma-separated, e.g. 2.75, 2, 1.667, 1.304, 1.208</div>
+            <label class="field-label">Transmission Efficiency <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Fraction of engine power that actually reaches the wheels, between 0 and 1. Around 0.95 is typical for a Formula Student chain drive.">i</button></label>
+            <input id="p-dt-transmission_efficiency" type="text" />
+            <div class="field-hint">e.g. 0.95 · dimensionless (0 to 1)</div>
+
+          </div>
+
+          <!-- Config tab -->
+          <div id="config-tab" class="inner-tab-section">
+
+            <div class="field-section-header">Track</div>
+            <label class="field-label">Track <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Which course the solver drives. Different layouts stress different parts of the car. Skidpad is a steady-state corner, FSUK is a full circuit.">i</button></label>
+            <select id="c-track-id"><option value="">Loading...</option></select>
+            <div class="field-hint">Pick a registered track. The backend resolves the file path.</div>
+
+            <div class="field-section-header">Datasets in use</div>
+            <label class="field-label">Powertrain <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="The active engine or motor map. Fixed by the server and used by every lap run.">i</button></label>
+            <div class="tyre-file-display" id="c-powertrain-display">--</div>
+            <label class="field-label">Tyre lateral <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Raw tyre data for side-to-side cornering forces. Used to fit the lateral grip curve.">i</button></label>
+            <div class="tyre-file-display" id="c-tyre-lat-display">--</div>
+            <label class="field-label">Tyre longitudinal <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Raw tyre data for braking and acceleration forces. Used to fit the longitudinal grip curve.">i</button></label>
+            <div class="tyre-file-display" id="c-tyre-long-display">--</div>
+            <div class="field-hint">These are fixed by the server. Use the Tyres tab to verify the tyre model.</div>
+
+            <div class="field-section-header">Solver</div>
+            <label class="field-label">Max Brake Decel <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="User-set cap on braking deceleration, in g. Not derived from brake or pad physics. It is a solver ceiling to keep results inside a sane operating range. Leave blank to use the server default.">i</button></label>
+            <input id="c-solver-max_brake_decel_g" type="text" />
+            <div class="field-hint">e.g. 1.8 · g. Leave blank to use the server default.</div>
+            <div class="field-checkbox-row">
+              <input type="checkbox" id="c-solver-use_rollover_speed_cap" />
+              <label for="c-solver-use_rollover_speed_cap">Use Rollover Speed Cap</label>
+              <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Limits cornering speed in places where the car would lift its inside wheels. Turn off to study the pure tyre-limited cornering speed.">i</button>
+            </div>
+
+            <div class="field-section-header">Simulation</div>
+            <div class="field-checkbox-row">
+              <input type="checkbox" id="c-sim-full_telemetry_mode" />
+              <label for="c-sim-full_telemetry_mode">Full Telemetry Mode</label>
+              <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Records every channel for plotting. Turn off for faster runs that only return summary stats.">i</button>
+            </div>
+
+            <div class="field-section-header">Ambient</div>
+            <label class="field-label">Air Density <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Mass of air per cubic metre, in kg/m3. 1.225 is the sea-level standard. Hot or high-altitude tracks have lower density and weaker aero forces.">i</button></label>
+            <input id="c-ambient-air_density" type="text" />
+            <div class="field-hint">e.g. 1.225 · kg/m3</div>
+
+          </div>
+
+        </div>
+
+        <div class="viz-panel">
+
+          <div class="summary-strip">
+            <div class="stat-item">
+              <span class="stat-label">Lap Time</span>
+              <span class="stat-value" id="stat-lap-time">--</span>
+              <span class="stat-unit">s</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-label">Max Lat G</span>
+              <span class="stat-value" id="stat-max-lat-g">--</span>
+              <span class="stat-unit">g</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-label">Max Long G</span>
+              <span class="stat-value" id="stat-max-long-g">--</span>
+              <span class="stat-unit">g</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-label">Track</span>
+              <span class="stat-value stat-value--sm" id="stat-track">--</span>
+            </div>
+            <span id="run-status" class="run-status"></span>
+            <button id="csvDownloadBtn" class="csv-btn" disabled>Download CSV</button>
+          </div>
+
+          <div id="runError" class="run-error" style="display:none"></div>
+
+          <div class="chart-workspace">
+            <div class="channel-list" id="channelList"></div>
+            <div class="chart-area">
+              <div class="viz-tab-bar" id="vizTabBar"></div>
+              <div id="vizChartArea" class="viz-chart-area"></div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <section id="sweeps" class="tab-section" role="tabpanel" aria-labelledby="tab-sweeps">
+      <div class="sim-panel">
+
+        <div class="panel inputs-panel">
+
+          <button id="runSweepBtn">Run Sweep</button>
+
+          <div class="field-section-header">Parameter</div>
+          <label class="field-label">Name <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Which vehicle parameter to vary across the sweep. The lap is re-run once per value while everything else stays fixed.">i</button></label>
+          <select id="sw-param"><option value="">Loading...</option></select>
+          <div class="field-hint" id="sw-param-hint"></div>
+
+          <label class="field-label">Values <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Either a comma-separated list of exact values, or a min,max range. A range uses the Steps count to sample evenly between the two ends.">i</button></label>
+          <input id="sw-values" type="text" placeholder="e.g. 250,350" />
+          <div class="field-hint" id="sw-values-hint">Range: min,max (uses steps). Explicit: 250,275,300,325,350</div>
+
+          <label class="field-label">Steps <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="How many sample points to place across a min,max range. Ignored when you supply an explicit list of values.">i</button></label>
+          <input id="sw-steps" type="text" value="5" />
+          <div class="field-hint">Points across a min,max range. Ignored for explicit lists.</div>
+
+          <div class="field-section-header">Track</div>
+          <label class="field-label">Track <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Which track to run this sweep on. Defaults to the track selected in the Config tab. Changing this overrides that selection for this sweep only.">i</button></label>
+          <select id="sw-track-id"><option value="">Default (from Config)</option></select>
+          <div class="field-hint">Leave on Default to use the Config tab selection.</div>
+
+        </div>
+
+        <div class="viz-panel">
+
+          <div class="summary-strip">
+            <div class="stat-item">
+              <span class="stat-label">Best</span>
+              <span class="stat-value" id="sw-stat-best-time">--</span>
+              <span class="stat-unit">s</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-label">Best at</span>
+              <span class="stat-value stat-value--sm" id="sw-stat-best-val">--</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-label">Worst</span>
+              <span class="stat-value" id="sw-stat-worst-time">--</span>
+              <span class="stat-unit">s</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-label">Worst at</span>
+              <span class="stat-value stat-value--sm" id="sw-stat-worst-val">--</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-label">Delta</span>
+              <span class="stat-value" id="sw-stat-delta">--</span>
+              <span class="stat-unit">s</span>
+            </div>
+            <span id="sweep-run-status" class="run-status"></span>
+            <button id="swCsvDownloadBtn" class="csv-btn" disabled>Download CSV</button>
+          </div>
+
+          <div id="sweepError" class="run-error" style="display:none"></div>
+
+          <div id="sweepChartContainer" class="sweep-chart-container">
+            <div class="sweep-placeholder">Set a parameter and run a sweep to see results.</div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <section id="tyres" class="tab-section" role="tabpanel" aria-labelledby="tab-tyres">
+      <div class="sim-panel">
+
+        <div class="panel inputs-panel">
+
+          <button id="runTyreBtn">Run Verification</button>
+
+          <div class="inner-tab-bar">
+            <button class="inner-tab active" data-inner-tab="tyre-verify-tab">Verification</button>
+            <button class="inner-tab" data-inner-tab="tyre-sensitivity-tab">Sensitivity</button>
+          </div>
+
+          <!-- Verification tab -->
+          <div id="tyre-verify-tab" class="inner-tab-section active">
+
+            <div class="field-section-header">Dataset in use</div>
+            <label class="field-label">Lateral <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Raw lateral grip dataset the model is fit against. Comes from rig testing of a specific tyre compound at a specific pressure.">i</button></label>
+            <div class="tyre-file-display" id="tyre-lat-display">--</div>
+            <label class="field-label">Longitudinal <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Raw braking and traction dataset the model is fit against. Same physical tyre as the lateral dataset, measured in a different rig mode.">i</button></label>
+            <div class="tyre-file-display" id="tyre-long-display">--</div>
+
+            <div class="field-section-header">Options</div>
+            <label class="field-label">Model Variant <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Which fitting strategy to use. tyre_peak_load_clamp caps the model at very high loads so grip stays physical. baseline lets the raw curve extrapolate.">i</button></label>
+            <select id="tyre-model-variant">
+              <option value="tyre_peak_load_clamp">tyre_peak_load_clamp</option>
+              <option value="baseline">baseline</option>
+            </select>
+            <div class="field-hint">tyre_peak_load_clamp caps high-load growth. baseline uses raw extrapolation.</div>
+
+          </div>
+
+          <!-- Sensitivity tab -->
+          <div id="tyre-sensitivity-tab" class="inner-tab-section">
+
+            <div class="field-section-header">Friction Scale</div>
+            <label class="field-label">Mu Multiplier <button type="button" class="info-tip" aria-label="More info" aria-hidden="true" data-tip="Scales the dataset's native peak friction. 1.0 reproduces the measured tyre. Below 1.0 simulates a worn or wet tyre. Above 1.0 simulates a fresh hot compound.">i</button></label>
+            <div class="slider-row">
+              <input type="range" id="tyre-mu-multiplier" min="0.5" max="1.5" step="0.05" value="1.0" />
+              <span class="slider-value" id="tyre-mu-multiplier-val">1.00</span>
+            </div>
+            <div class="field-hint">1.0 matches the dataset native peak mu. Lower for wet or worn, higher for fresh compound.</div>
+
+          </div>
+
+        </div>
+
+        <div class="tyre-viz-panel">
+
+          <div class="summary-strip">
+            <div class="stat-item">
+              <span class="stat-label">Validation</span>
+              <span class="stat-value stat-value--sm" id="tyre-stat-result">--</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-label">Lat RMSE</span>
+              <span class="stat-value" id="tyre-stat-lat-rmse">--</span>
+              <span class="stat-unit">%</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-label">Long RMSE</span>
+              <span class="stat-value" id="tyre-stat-long-rmse">--</span>
+              <span class="stat-unit">%</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-label">Threshold</span>
+              <span class="stat-value" id="tyre-stat-threshold">12</span>
+              <span class="stat-unit">%</span>
+            </div>
+            <span id="tyre-run-status" class="run-status"></span>
+            <span id="tyre-stat-mu-note" class="tyre-mu-note" style="display:none"></span>
+          </div>
+
+          <div id="tyreError" class="run-error" style="display:none"></div>
+
+          <div class="tyre-charts-area" id="tyreChartsArea">
+            <div class="tyre-placeholder">Run verification to see tyre model accuracy against TTC data.</div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <section id="aero" class="tab-section" role="tabpanel" aria-labelledby="tab-aero">
+      <h2 class="section-title">Aerodynamics</h2>
+      <p class="section-sub">Coming in v2. Will expose drag and downforce sensitivities, aero-CoP sweeps, and a side-by-side run between aero-on and aero-off. Intended for teams running wing packages who want to trade drag for cornering grip across specific track sectors.</p>
+    </section>
+
+    <section id="powertrain" class="tab-section" role="tabpanel" aria-labelledby="tab-powertrain">
+      <h2 class="section-title">Powertrain</h2>
+      <p class="section-sub">Coming in v2. Will allow the active torque map to be swapped and compared, expose gear ratio sensitivity runs, and show where on the power curve the solver spends most of the lap. Useful for gearbox and engine tuning decisions.</p>
+    </section>
+
+    <section id="energy" class="tab-section" role="tabpanel" aria-labelledby="tab-energy">
+      <h2 class="section-title">Energy Management</h2>
+      <p class="section-sub">Coming in v2. Will show how power limits and lift-and-coast strategies affect lap time and energy consumption together. Targets teams subject to the FS energy rule and wanting to find the fastest lap within an energy budget.</p>
+    </section>
+
+    <section id="validation" class="tab-section" role="tabpanel" aria-labelledby="tab-validation">
+      <h2 class="section-title">Validation</h2>
+      <p class="section-sub">Coming in v2. Will let a team load a logged lap from a real event and compare it channel by channel against a simulated lap on the same track. The goal is to quantify model error and build confidence before using the sim to make setup decisions.</p>
+    </section>
+
+    <section id="lessons" class="tab-section" role="tabpanel" aria-labelledby="tab-lessons">
+      <div class="lessons-layout">
+        <nav class="lessons-sidebar">
+          <div class="panel-label">Lessons</div>
+          <ul class="lesson-list" id="lessonList">
+            <li class="lesson-item active" data-src="Simulator-Basics.md">Simulator Basics</li>
+            <li class="lesson-item" data-src="Tyre-Model.md">Tyre Model</li>
+            <li class="lesson-item" data-src="Tyre-Model-Deep-Dive.md">Tyre Model Deep Dive</li>
+            <li class="lesson-item" data-src="Powertrain-Model.md">Powertrain Model</li>
+            <li class="lesson-item" data-src="Aero-Model.md">Aerodynamics Model</li>
+            <li class="lesson-item" data-src="Load-Transfer-and-Normal-Loads.md">Load Transfer and Normal Loads</li>
+            <li class="lesson-item" data-src="Braking-Dynamics-and-Deceleration-Budget.md">Braking Dynamics and Deceleration Budget</li>
+            <li class="lesson-item" data-src="Vehicle-Modelling.md">Vehicle Modelling</li>
+            <li class="lesson-item" data-src="simulator-summary.md">Simulator Summary and Core Solver</li>
+            <li class="lesson-item" data-src="Numerical-Robustness-and-Solver-Failure-Modes.md">Numerical Robustness and Solver Failure Modes</li>
+            <li class="lesson-item" data-src="Vehicle-Modelling-Diagnostics.md">Vehicle Modelling Diagnostics and Trust Checks</li>
+            <li class="lesson-item" data-src="Vehicle-Analysis-IRL-vs-Simulator.md">Vehicle Analysis IRL vs Simulator and GG Envelope</li>
+            <li class="lesson-item" data-src="Track-Geometry-and-Sampling.md">Track Geometry and Sampling for Vehicle Dynamics</li>
+            <li class="lesson-item" data-src="Validation-and-Falsification-Workflow.md">Validation and Falsification Workflow</li>
+            <li class="lesson-item" data-src="Calibration-and-Sensitivity-Workflow.md">Calibration and Sensitivity Workflow</li>
+            <li class="lesson-item" data-src="Scenario-Separation.md">Scenario Separation</li>
+          </ul>
+        </nav>
+        <div class="panel lessons-content">
+          <div class="panel-label" id="lessonTitle">Simulator Basics</div>
+          <div class="lesson-body" id="lessonBody">Loading...</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="scopeModal" class="scope-modal hidden" role="dialog" aria-modal="true" aria-labelledby="scopeModalTitle">
+    <div class="scope-modal-backdrop" id="scopeBackdrop"></div>
+    <div class="scope-modal-card">
+      <div class="scope-modal-header">
+        <span class="panel-label" id="scopeModalTitle">Model scope and limits</span>
+        <button type="button" class="scope-close-btn" id="scopeCloseBtn">Close</button>
+      </div>
+      <div class="scope-modal-body">
+        <p class="scope-lead">A quasi-steady-state lap time simulator built for Formula Student scale cars. It is a design trend tool, not a ground truth predictor.</p>
+
+        <div class="scope-block-label">What is modelled</div>
+        <ul class="scope-list">
+          <li>Pacejka pure-slip tyre forces with load-dependent peak</li>
+          <li>Isotropic friction ellipse for combined slip</li>
+          <li>Speed-dependent downforce and drag with a fixed centre of pressure</li>
+          <li>Quasi-static longitudinal and lateral load transfer</li>
+          <li>Engine torque curve, gearing, and traction-limited acceleration</li>
+        </ul>
+
+        <div class="scope-block-label">What is not modelled</div>
+        <ul class="scope-list">
+          <li>Transient yaw dynamics and counter-steer lag</li>
+          <li>Full Magic Formula combined-slip weighting</li>
+          <li>Tyre temperature, pressure, and relaxation length</li>
+          <li>Differential type or preload</li>
+          <li>Suspension kinematics like anti-dive, anti-squat, and camber gain</li>
+          <li>Driver behaviour. Inputs are assumed ideal</li>
+          <li>Surface roughness, wind, and weather</li>
+        </ul>
+
+        <div class="scope-block-label">Validation status</div>
+        <p class="scope-text">No telemetry comparison yet. Current trust evidence is parameter enforcement contracts and solver residual telemetry. Telemetry overlay is on the v2 roadmap. See the Validation tab.</p>
+
+        <div class="scope-block-label">Code paths</div>
+        <ul class="scope-list scope-list-code">
+          <li>src/simulator/util/calcSpeedProfile.py</li>
+          <li>src/simulator/util/vehicleDynamics.py</li>
+          <li>src/vehicle/Tyres/baseTyre.py</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div id="chatPanel" class="chat-panel hidden">
+    <div class="chat-panel-header">
+      <span class="panel-label">Brandy the assistant</span>
+      <span class="chat-panel-subtitle">Ask any question about the sim or vehicle dynamics, and it reads the lessons documents in the 'lesson guide' tab, and gives information from there</span>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-bar">
+      <input type="text" id="chatQuestion" placeholder="Ask about the simulator..." />
+      <button id="chatSubmit">Send</button>
+    </div>
+  </div>
+
+  <link rel="stylesheet" href="/static/katex/katex.min.css" />
+  <script src="/static/marked.min.js"></script>
+  <script src="/static/katex/katex.min.js"></script>
+  <script src="/static/chart.umd.min.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

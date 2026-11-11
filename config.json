@@ -1,0 +1,25 @@
+{
+    "powertrain": {
+        "powertrain" : "datasets/vehicle/PU_data/Honda_CBR_600RR_RPM_vs_Peak_Power.csv",
+        "type": "lookup"
+    },
+    "track": {
+        "file_path" : "datasets/tracks/FSUK.txt"
+    },
+    "tyre_model":{
+        "file_path_longit": "datasets/vehicle/tyre_data/round_6_12_psi_longit_load_tyredata_parsed.csv",
+        "file_path_lateral": "datasets/vehicle/tyre_data/round_8_12_psi_lateral_load_tyredata_parsed.csv",
+        "type": "lookup",
+        "clamp_peak_load_high": true
+    },
+    "vehicle_parameters": "parameters.json",
+    "debug_mode": false,
+    "full_telemetry_mode": true,
+    "solver": {
+        "use_rollover_speed_cap": true,
+        "corner_max_bisection_iters": 14
+    },
+    "ambient_conditions": {
+        "air_density": 1.225
+    }
+}

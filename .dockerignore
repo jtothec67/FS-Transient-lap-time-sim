@@ -1,0 +1,16 @@
+.git
+.vscode
+.venv
+.uv-cache
+.pytest_cache
+__pycache__
+*.pyc
+*.pyo
+ab_test_outputs
+artifacts
+build
+dist
+.superpowers
+config
+*.spec
+test_results.txt
