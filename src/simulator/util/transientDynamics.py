@@ -105,10 +105,9 @@ def update_longitudinal_speed(state, vehicle, throttle, brake, delta_time):
     return acceleration
 
 
+def run_transient_replay(track, vehicle, speeds, yaw_inertia=100.0):
 
-
-def run_transient_replay(track, vehicle, speeds, yaw_inertia=100.0): # TODO: Get realistic yaw inertia value
-    # Initialise the car at the beginning of the circuit
+    # Initialise the vehicle at the circuit start
     state = VehicleState(
         longitudinal_velocity=float(speeds[0]),
         x=track.points[0].x,
@@ -117,115 +116,87 @@ def run_transient_replay(track, vehicle, speeds, yaw_inertia=100.0): # TODO: Get
     )
 
     results = []
+
     delta_time = 0.01
     elapsed_time = 0.0
-    predicted_throttle = 0.0
-    predicted_brake = 0.0
 
-    # Distance progressed along the reference circuit
     distance = track.points[0].distance
-    point_index = 1
     nearest_segment = 0
+    point_index = 1
 
-    # Run for at most 180 simulated seconds
+    steering = 0.0
+    throttle = 0.0
+    brake = 0.0
+
+    # Run the simulation for up to 180 seconds
     for step in range(int(180 / delta_time)):
+
         if point_index >= len(track.points):
             break
 
-        previous = track.points[point_index - 1]
-        current = track.points[point_index]
-
-        ds = current.distance - previous.distance
-
-        if ds <= 0:
-            point_index += 1
-            continue
-        
-        # Calculate steering based on the car's actual position
-        steering, nearest_segment, measured_distance, path_error = calculate_steering(
-            state, track, nearest_segment, vehicle.params.wheelbase
-        )
-
-        # Track progress now comes from the vehicle's actual position
-        distance = max(distance, measured_distance)
-
-        # Stop if the car moves too far from the intended path
-        if path_error > 8.0:
-            print(f"Replay stopped: vehicle is {path_error:.1f}m from the path")
-            break
-
-        # Interpolate the target speed at the current track position
-        fraction = max(0.0, min(
-            1.0, (distance - previous.distance) / ds
-        ))
-
-        # Interpolate target speed from the QSS profile
-        target_speed = (
-            speeds[point_index - 1]
-            + (speeds[point_index] - speeds[point_index - 1]) * fraction
-        )
-
-        
-        # Recalculate predictive inputs every 0.2 seconds
-        if step % 20 == 0:
-
-            # First decide whether braking is needed
-            predicted_brake = calculate_predictive_brake(
+        # Recalculate controls every 0.3 seconds
+        if step % 30 == 0:
+            steering, throttle, brake = calculate_predictive_controls(
                 state,
                 vehicle,
                 track,
-                speeds,
                 nearest_segment,
                 yaw_inertia
             )
 
-            # Only evaluate throttle if we don't need to brake
-            if predicted_brake < 0.05:
-                predicted_throttle = calculate_predictive_throttle(
-                    state,
-                    vehicle,
-                    track,
-                    speeds,
-                    nearest_segment,
-                    yaw_inertia
-                )
-            else:
-                predicted_throttle = 0.0
-
-        # Apply the selected inputs
-        if predicted_brake >= 0.05:
-            throttle = 0.0
-            brake = predicted_brake
-        else:
-            throttle = predicted_throttle
-            brake = 0.0
-
-
-        # Update the transient vehicle model
+        # Simulate the vehicle using the selected inputs
         update_vehicle(
-            state, vehicle, steering, throttle, brake,
-            yaw_inertia, delta_time
+            state,
+            vehicle,
+            steering,
+            throttle,
+            brake,
+            yaw_inertia,
+            delta_time
         )
 
         elapsed_time += delta_time
 
-        # Stop if the simplified model becomes unreliable
+        # Stop if vehicle state becomes numerically unreliable
         if (
             not all(math.isfinite(v) for v in (
                 state.longitudinal_velocity,
                 state.lateral_velocity,
                 state.yaw_rate,
                 state.x,
-                state.y
+                state.y,
+                state.heading
             ))
-            or state.longitudinal_velocity < 0.5
-            or abs(state.lateral_velocity) > 10.0
             or abs(state.yaw_rate) > 5.0
+            or abs(state.lateral_velocity) > 10.0
+            or state.longitudinal_velocity < 0.5
         ):
-            print(f"Replay stopped near {distance:.1f}m: unstable state")
+            print(
+                f"Replay stopped at {distance:.1f}m | "
+                f"Forward Speed: {state.longitudinal_velocity:.2f}m/s | "
+                f"Lateral Velocity: {state.lateral_velocity:.2f}m/s | "
+                f"Yaw Rate: {state.yaw_rate:.2f}rad/s | "
+                f"Throttle: {throttle:.2f} | "
+                f"Brake: {brake:.2f}"
+            )
             break
 
-        # Record results whenever another track point is passed
+        # Determine actual progress along the racing line
+        nearest_segment, measured_distance, path_error = project_to_track(
+            state, track, nearest_segment
+        )
+
+        distance = max(distance, measured_distance)
+
+        # Emergency path deviation check
+        if path_error > 8.0:
+            print(
+                f"Replay stopped: vehicle is "
+                f"{path_error:.1f}m from the path"
+            )
+            break
+
+        # Record results whenever a track point is passed
         while (
             point_index < len(track.points)
             and distance >= track.points[point_index].distance
@@ -252,7 +223,6 @@ def run_transient_replay(track, vehicle, speeds, yaw_inertia=100.0): # TODO: Get
         print("Replay stopped: maximum simulation time reached")
 
     return results
-
 
 
 def update_vehicle(state, vehicle, steering_angle, throttle, brake,
@@ -389,8 +359,6 @@ def update_vehicle(state, vehicle, steering_angle, throttle, brake,
     return (new_speed - speed) / delta_time
 
 
-
-
 def limit_combined_forces(fx, fy, max_fx, max_fy):
     # Calculate how much of the available grip is being requested
     utilisation = math.hypot(
@@ -406,16 +374,19 @@ def limit_combined_forces(fx, fy, max_fx, max_fy):
     return fx, fy
 
 
-def calculate_steering(state, track, last_segment, wheelbase):
+
+def project_to_track(state, track, last_segment):
+    """Find the nearest point on the reference racing line."""
+
     points = track.points
+    last_segment = max(0, min(last_segment, len(points) - 2))
 
-    # Search nearby track segments for the car's position
-    start = max(0, last_segment - 3)
-    end = min(len(points) - 1, last_segment + 20)
+    start = max(0, last_segment - 5)
+    end = min(len(points) - 1, last_segment + 25)
 
-    best_distance = float("inf")
-    nearest_segment = last_segment
-    track_distance = 0.0
+    best_error_sq = float("inf")
+    best_segment = last_segment
+    best_progress = points[last_segment].distance
 
     for i in range(start, end):
         p1 = points[i]
@@ -428,295 +399,346 @@ def calculate_steering(state, track, last_segment, wheelbase):
         if length_sq < 1e-10:
             continue
 
-        # Project the vehicle position onto the track segment
-        t = ((state.x - p1.x) * dx + (state.y - p1.y) * dy) / length_sq
+        # Project vehicle position onto the track segment
+        t = (
+            (state.x - p1.x) * dx
+            + (state.y - p1.y) * dy
+        ) / length_sq
+
         t = max(0.0, min(1.0, t))
 
         closest_x = p1.x + t * dx
         closest_y = p1.y + t * dy
 
-        distance_sq = (
-            (state.x - closest_x) ** 2
-            + (state.y - closest_y) ** 2
+        error_sq = (
+            (state.x - closest_x)**2
+            + (state.y - closest_y)**2
         )
 
-        if distance_sq < best_distance:
-            best_distance = distance_sq
-            nearest_segment = i
-            track_distance = p1.distance + t * (p2.distance - p1.distance)
+        if error_sq < best_error_sq:
+            best_error_sq = error_sq
+            best_segment = i
+            best_progress = (
+                p1.distance + t * (p2.distance - p1.distance)
+            )
 
-    # Choose a target point ahead of the car
-    lookahead = max(8.0, min(18.0, state.longitudinal_velocity * 0.7))
-    target_distance = min(points[-1].distance, track_distance + lookahead)
-
-    target_index = nearest_segment + 1
-
-    while (target_index < len(points) - 1
-           and points[target_index].distance < target_distance):
-        target_index += 1
-
-    p1 = points[target_index - 1]
-    p2 = points[target_index]
-
-    # Interpolate target position
-    segment_length = max(p2.distance - p1.distance, 1e-6)
-    t = (target_distance - p1.distance) / segment_length
-
-    target_x = p1.x + t * (p2.x - p1.x)
-    target_y = p1.y + t * (p2.y - p1.y)
-
-    # Calculate direction from car to target
-    dx = target_x - state.x
-    dy = target_y - state.y
-
-    target_angle = math.atan2(dy, dx)
-    angle_error = target_angle - state.heading
-
-    distance_to_target = max(math.hypot(dx, dy), 1e-6)
-
-    # Pure Pursuit steering calculation
-    steering = math.atan2(
-        2 * wheelbase * math.sin(angle_error),
-        distance_to_target
-    )
-
-    steering_degrees = math.degrees(steering)
-    steering_degrees = max(-20.0, min(20.0, steering_degrees))
-
-    return steering_degrees, nearest_segment, track_distance, math.sqrt(best_distance)
+    return best_segment, best_progress, math.sqrt(best_error_sq)
 
 
 
-def calculate_speed_inputs(state, track, speeds, distance, point_index, target_speed):
-    speed = state.longitudinal_velocity
-
-    # Controller settings
-    lookahead_distance = 100.0
-    estimated_braking = 7.0  # m/s²
-    max_brake = 0.7
-    max_throttle = 0.5
-
-    # Start with the current target speed
-    allowed_speed = float(target_speed)
-
-    # Check upcoming corners
-    for i in range(point_index, len(track.points)):
-        ds = track.points[i].distance - distance
-
-        if ds > lookahead_distance:
-            break
-
-        if ds <= 0:
-            continue
-
-        upcoming_speed = float(speeds[i])
-
-        # Maximum speed we can travel now while still
-        # being able to brake to the upcoming speed
-        max_speed_now = math.sqrt(
-            upcoming_speed**2 + 2.0 * estimated_braking * ds
-        )
-
-        allowed_speed = min(allowed_speed, max_speed_now)
-
-    # Compare actual speed against allowable speed
-    speed_error = allowed_speed - speed
-
-    if speed_error < 0:
-        # Vehicle is travelling too quickly
-        throttle = 0.0
-        brake = min(max_brake, -speed_error * 0.2)
-    else:
-        # Vehicle can accelerate towards target
-        throttle = min(max_throttle, speed_error * 0.15)
-        brake = 0.0
-
-    return throttle, brake
-
-
-def calculate_predictive_throttle(state, vehicle, track, speeds,
+def calculate_predictive_controls(state, vehicle, track,
                                   nearest_segment, yaw_inertia):
 
-    # Throttle inputs to test
-    throttle_options = [0.0, 0.15, 0.30, 0.45, 0.60, 0.75, 0.90, 1.0]
+    # ==========================================
+    # CONTROLLER SETTINGS
+    # ==========================================
 
-    # Prediction settings
-    prediction_time = 0.7
-    delta_time = 0.02
-    steps = int(prediction_time / delta_time)
+    prediction_time = 4.2       # Seconds to look into the future
+    prediction_dt = 0.06        # Physics timestep during predictions
+    control_interval = 0.30     # Must match real controller update interval
+    steering_switch_time = 1.2 # When a strategy can change steering bias
 
-    best_throttle = 0.0
+    # Temporary racing-line corridor (not actual track boundaries)
+    max_path_error = 3.0        # Metres
+    max_sideslip = 15.0         # Degrees
+    max_yaw_rate = 4.8          # rad/s
 
-    for throttle in throttle_options:
+    wheelbase = vehicle.params.wheelbase
+    points = track.points
+    last_distance = points[-1].distance
 
-        # Copy the current state so predictions don't
-        # affect the real simulation
-        predicted_state = replace(state)
-        predicted_segment = nearest_segment
-        safe = True
+    steps = int(round(prediction_time / prediction_dt))
+    control_steps = max(1, int(round(control_interval / prediction_dt)))
 
-        for _ in range(steps):
+    # ==========================================
+    # GENERATE STEERING STRATEGIES
+    # ==========================================
 
-            # Calculate steering for the predicted position
-            steering, predicted_segment, distance, path_error = calculate_steering(
-                predicted_state,
-                track,
-                predicted_segment,
-                vehicle.params.wheelbase
-            )
+    # Initial adjustments to Pure Pursuit steering
+    steering_strategies = [
+        (offset, 0.0)
+        for offset in (-12, -9, -6, -3, 0, 3, 6, 9, 12)
+    ]
 
-            # Simulate the vehicle with this throttle input
-            update_vehicle(
-                predicted_state,
-                vehicle,
-                steering,
-                throttle,
-                0.0,
-                yaw_inertia,
-                delta_time
-            )
+    # Additional strategies that change steering later
+    steering_strategies += [
+        (0, -6),
+        (0, 6),
+        (-6, 6),
+        (6, -6)
+    ]
 
-            # Calculate the predicted sideslip angle
-            sideslip = math.degrees(math.atan2(
-                predicted_state.lateral_velocity,
-                max(predicted_state.longitudinal_velocity, 0.1)
-            ))
+    # Each tuple contains:
+    # (initial steering offset, additional future offset)
 
-            # Reject unstable predictions
-            if (
-                not all(math.isfinite(v) for v in (
-                    predicted_state.x,
-                    predicted_state.y,
-                    predicted_state.longitudinal_velocity,
-                    predicted_state.lateral_velocity,
-                    predicted_state.yaw_rate
+    # ==========================================
+    # GENERATE THROTTLE / BRAKE STRATEGIES
+    # ==========================================
+
+    # Each strategy contains:
+    # (time, throttle, brake)
+
+    plans = [
+        [(0.0, 0.0, 0.0)],  # Coast
+        [(0.0, 0.5, 0.0)],  # Half throttle
+        [(0.0, 1.0, 0.0)],  # Full throttle
+        [(0.0, 0.0, 0.5)],  # Half brake
+        [(0.0, 0.0, 1.0)]   # Full brake
+    ]
+
+    # Accelerate now, then brake later
+    for brake_start in (0.6, 1.2, 1.8, 2.4):
+        for brake_level in (0.5, 1.0):
+            plans.append([
+                (0.0, 1.0, 0.0),
+                (brake_start, 0.0, brake_level)
+            ])
+
+    # Partial throttle now, then brake later
+    for brake_start in (0.9, 1.8):
+        for brake_level in (0.5, 1.0):
+            plans.append([
+                (0.0, 0.5, 0.0),
+                (brake_start, 0.0, brake_level)
+            ])
+
+    # Brake now, then accelerate later
+    for brake_duration in (0.6, 1.2, 1.8):
+        plans.append([
+            (0.0, 0.0, 1.0),
+            (brake_duration, 0.7, 0.0)
+        ])
+
+    # Coast now, then brake later
+    for brake_start in (1.2, 2.4):
+        plans.append([
+            (0.0, 0.0, 0.0),
+            (brake_start, 0.0, 1.0)
+        ])
+
+    # ==========================================
+    # REFERENCE STEERING
+    # ==========================================
+
+    def pure_pursuit(predicted, segment, progress):
+
+        lookahead = max(
+            4.0,
+            min(12.0, predicted.longitudinal_velocity * 0.45)
+        )
+
+        target_distance = min(
+            last_distance,
+            progress + lookahead
+        )
+
+        i = min(segment + 1, len(points) - 1)
+
+        while (
+            i < len(points) - 1
+            and points[i].distance < target_distance
+        ):
+            i += 1
+
+        p1 = points[i - 1]
+        p2 = points[i]
+
+        fraction = (
+            (target_distance - p1.distance)
+            / max(1e-9, p2.distance - p1.distance)
+        )
+        fraction = max(0.0, min(1.0, fraction))
+
+        target_x = p1.x + fraction * (p2.x - p1.x)
+        target_y = p1.y + fraction * (p2.y - p1.y)
+
+        dx = target_x - predicted.x
+        dy = target_y - predicted.y
+
+        angle_error = (
+            math.atan2(dy, dx) - predicted.heading
+        )
+
+        return math.degrees(math.atan2(
+            2.0 * wheelbase * math.sin(angle_error),
+            max(1e-6, math.hypot(dx, dy))
+        ))
+
+    # ==========================================
+    # INITIALISE SEARCH
+    # ==========================================
+
+    start_segment, start_progress, initial_error = project_to_track(
+        state, track, nearest_segment
+    )
+
+    if initial_error > max_path_error:
+        raise RuntimeError(
+            f"Vehicle already {initial_error:.1f}m from racing line"
+        )
+
+    best_score = -float("inf")
+    best_action = None
+
+    # ==========================================
+    # SIMULATE COMPLETE DRIVING STRATEGIES
+    # ==========================================
+
+    for early_offset, later_change in steering_strategies:
+        for plan in plans:
+
+            # Copy vehicle state for this strategy
+            predicted = replace(state)
+            segment = start_segment
+            progress = start_progress
+
+            score_penalty = 0.0
+            plan_index = 0
+
+            steering = 0.0
+            first_action = None
+            feasible = True
+
+            # Simulate the entire prediction horizon
+            for step in range(steps):
+
+                t = step * prediction_dt
+
+                # Select throttle/brake for this future time
+                while (
+                    plan_index + 1 < len(plan)
+                    and t >= plan[plan_index + 1][0] - 1e-9
+                ):
+                    plan_index += 1
+
+                _, throttle, brake = plan[plan_index]
+
+                # Recalculate steering at the same frequency
+                # as the real controller
+                if step % control_steps == 0:
+
+                    base_steering = pure_pursuit(
+                        predicted, segment, progress
+                    )
+
+                    offset = early_offset
+
+                    if t >= steering_switch_time:
+                        offset += later_change
+
+                    steering = max(
+                        -20.0,
+                        min(20.0, base_steering + offset)
+                    )
+
+                # Save the first action to apply to real car
+                if first_action is None:
+                    first_action = (steering, throttle, brake)
+
+                # Simulate vehicle physics
+                update_vehicle(
+                    predicted,
+                    vehicle,
+                    steering,
+                    throttle,
+                    brake,
+                    yaw_inertia,
+                    prediction_dt
+                )
+
+                # Check numerical validity
+                values = (
+                    predicted.x,
+                    predicted.y,
+                    predicted.heading,
+                    predicted.longitudinal_velocity,
+                    predicted.lateral_velocity,
+                    predicted.yaw_rate
+                )
+
+                if not all(math.isfinite(v) for v in values):
+                    feasible = False
+                    break
+
+                # Determine position relative to racing line
+                segment, projected_progress, path_error = project_to_track(
+                    predicted, track, segment
+                )
+
+                sideslip = math.degrees(math.atan2(
+                    predicted.lateral_velocity,
+                    max(0.5, predicted.longitudinal_velocity)
                 ))
-                or abs(sideslip) > 10.0
-                or abs(predicted_state.yaw_rate) > 4.0
-                or path_error > 6.0
-                or predicted_state.longitudinal_velocity < 0.5
-            ):
-                safe = False
-                break
 
-            # Interpolate the QSS speed target at the
-            # predicted position along the track
-            p1 = track.points[predicted_segment]
-            p2 = track.points[predicted_segment + 1]
+                # ==================================
+                # HARD SAFETY CONSTRAINTS
+                # ==================================
 
-            ds = max(p2.distance - p1.distance, 1e-6)
-            fraction = max(0.0, min(
-                1.0, (distance - p1.distance) / ds
-            ))
+                if (
+                    path_error > max_path_error
+                    or abs(sideslip) > max_sideslip
+                    or abs(predicted.yaw_rate) > max_yaw_rate
+                    or abs(predicted.lateral_velocity) > 9.5
+                    or predicted.longitudinal_velocity < 0.5
+                ):
+                    feasible = False
+                    break
 
-            target_speed = (
-                float(speeds[predicted_segment]) * (1 - fraction)
-                + float(speeds[predicted_segment + 1]) * fraction
+                # Estimate progress, avoiding large jumps
+                # caused by track projection
+                actual_speed = math.hypot(
+                    predicted.longitudinal_velocity,
+                    predicted.lateral_velocity
+                )
+
+                max_ds = (
+                    actual_speed * prediction_dt * 1.25 + 0.15
+                )
+
+                progress = max(
+                    progress,
+                    min(projected_progress, progress + max_ds)
+                )
+
+                # ==================================
+                # SCORE PATH QUALITY
+                # ==================================
+
+                # Staying within the corridor is mandatory.
+                # Inside it, prefer smaller path errors
+                # and less sideslip.
+                score_penalty += prediction_dt * (
+                    2.0 * path_error**2
+                    + 0.02 * sideslip**2
+                )
+
+                # Reached the end of the circuit
+                if progress >= last_distance - 0.1:
+                    break
+
+            # Only evaluate trajectories that remained feasible
+            if not feasible:
+                continue
+
+            # Reward progress, penalise poor path following
+            score = (
+                progress - start_progress
+                - score_penalty
             )
 
-            # Don't accelerate significantly beyond the
-            # speed profile's predicted limit
-            if predicted_state.longitudinal_velocity > target_speed + 1.0:
-                safe = False
-                break
+            if score > best_score:
+                best_score = score
+                best_action = first_action
 
-        # Options are in increasing throttle order,
-        # so the last safe option is the highest
-        if safe:
-            best_throttle = throttle
+    # ==========================================
+    # RETURN BEST STRATEGY
+    # ==========================================
 
-    return best_throttle
+    if best_action is None:
+        raise RuntimeError(
+            f"No feasible {prediction_time:.1f}s strategy at "
+            f"{start_progress:.1f}m | "
+            f"Speed: {state.longitudinal_velocity * 3.6:.1f}km/h"
+        )
 
-
-
-def calculate_predictive_brake(state, vehicle, track, speeds,
-                               nearest_segment, yaw_inertia):
-
-    brake_options = [0.0, 0.15, 0.30, 0.45, 0.60, 0.80, 1.0]
-
-    prediction_time = 1.2
-    delta_time = 0.02
-    steps = int(prediction_time / delta_time)
-
-    best_brake = 0.0
-    best_score = float("inf")
-
-    for brake in brake_options:
-        predicted_state = replace(state)
-        predicted_segment = nearest_segment
-        score = 0.0
-
-        for _ in range(steps):
-            # Find the predicted position and steering
-            steering, predicted_segment, distance, path_error = calculate_steering(
-                predicted_state,
-                track,
-                predicted_segment,
-                vehicle.params.wheelbase
-            )
-
-            # Simulate with this braking input
-            update_vehicle(
-                predicted_state, vehicle, steering,
-                0.0, brake, yaw_inertia, delta_time
-            )
-
-            # Reject numerically unstable predictions
-            if not all(math.isfinite(v) for v in (
-                predicted_state.x,
-                predicted_state.y,
-                predicted_state.longitudinal_velocity,
-                predicted_state.lateral_velocity,
-                predicted_state.yaw_rate
-            )):
-                score = float("inf")
-                break
-
-            # Find the QSS target speed at the predicted position
-            p1 = track.points[predicted_segment]
-            p2 = track.points[predicted_segment + 1]
-
-            ds = max(p2.distance - p1.distance, 1e-6)
-            fraction = max(0.0, min(
-                1.0, (distance - p1.distance) / ds
-            ))
-
-            target_speed = (
-                float(speeds[predicted_segment]) * (1 - fraction)
-                + float(speeds[predicted_segment + 1]) * fraction
-            )
-
-            # Compare predicted speed with target speed
-            speed_error = predicted_state.longitudinal_velocity - target_speed
-
-            # Penalise exceeding the target speed more heavily
-            overspeed = max(0.0, speed_error - 0.25)
-            underspeed = max(0.0, -speed_error - 0.25)
-
-            score += 6.0 * overspeed**2
-            score += 3.0 * underspeed**2
-
-            # Penalise large deviations from the racing line
-            score += 2.0 * max(0.0, path_error - 4.0)**2
-
-            # Penalise excessive sideslip
-            sideslip = math.degrees(math.atan2(
-                predicted_state.lateral_velocity,
-                max(predicted_state.longitudinal_velocity, 0.1)
-            ))
-
-            score += 2.0 * max(0.0, abs(sideslip) - 8.0)**2
-
-            # Avoid unreliable near-zero forward-speed behaviour
-            if predicted_state.longitudinal_velocity < 0.5:
-                score = float("inf")
-                break
-
-        # Slight preference for less braking when results are similar
-        score += 0.1 * brake**2
-
-        if score < best_score:
-            best_score = score
-            best_brake = brake
-
-    return best_brake
+    return best_action
